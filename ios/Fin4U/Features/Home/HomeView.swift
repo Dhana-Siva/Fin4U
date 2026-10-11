@@ -101,9 +101,17 @@ struct ExpenseRow: View {
 
             Spacer()
 
-            Text(Money.format(expense.totalCents, currency: expense.currency))
-                .font(.body.weight(.semibold))
-                .monospacedDigit()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(Money.format(expense.totalCents, currency: expense.currency))
+                    .font(.body.weight(.semibold))
+                    .monospacedDigit()
+                if expense.isShared {
+                    Text("Your share \(Money.format(expense.myTotalCents, currency: expense.currency))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            }
         }
         .contentShape(Rectangle())
     }
@@ -111,7 +119,9 @@ struct ExpenseRow: View {
     private var subtitle: String {
         let date = expense.date.formatted(.dateTime.month(.abbreviated).day())
         let count = expense.items.count
-        return count > 0 ? "\(date) · \(count) item\(count == 1 ? "" : "s")" : date
+        var text = count > 0 ? "\(date) · \(count) item\(count == 1 ? "" : "s")" : date
+        if expense.isShared { text += " · Shared" }
+        return text
     }
 }
 
@@ -122,17 +132,25 @@ struct MonthSummaryCard: View {
     let expenses: [Expense]
     let fallbackCurrency: String
 
+    // Everything here is the owner's own share, so a receipt split with a
+    // roommate only counts the part they actually paid for.
     private var totalsByCurrency: [(currency: String, total: Int)] {
         Dictionary(grouping: expenses, by: \.currency)
-            .map { (currency: $0.key, total: $0.value.reduce(0) { $0 + $1.totalCents }) }
+            .map { (currency: $0.key, total: $0.value.reduce(0) { $0 + $1.myTotalCents }) }
             .sorted { $0.total > $1.total }
     }
 
     private var primaryCurrency: String { totalsByCurrency.first?.currency ?? fallbackCurrency }
 
+    /// By item category, so a supermarket trip that included vitamins counts
+    /// partly under Groceries and partly under Health.
     private var categoryTotals: [(category: ExpenseCategory, total: Int)] {
-        Dictionary(grouping: expenses.filter { $0.currency == primaryCurrency }, by: \.category)
-            .map { (category: $0.key, total: $0.value.reduce(0) { $0 + $1.totalCents }) }
+        var totals: [ExpenseCategory: Int] = [:]
+        for expense in expenses where expense.currency == primaryCurrency {
+            for (category, cents) in expense.myCategoryTotals { totals[category, default: 0] += cents }
+        }
+        return totals
+            .map { (category: $0.key, total: $0.value) }
             .sorted { $0.total > $1.total }
     }
 

@@ -17,12 +17,13 @@ import app as backend  # noqa: E402
 from app import app  # noqa: E402,F401  (re-exported for uvicorn)
 
 ITEMS = [
-    backend.ReceiptItem(name="Organic Bananas", quantity=1, line_total_cents=189),
-    backend.ReceiptItem(name="Whole Milk 1 gal", quantity=1, line_total_cents=429),
-    backend.ReceiptItem(name="Sourdough Bread", quantity=1, line_total_cents=599),
-    backend.ReceiptItem(name="Chicken Breast", quantity=1, line_total_cents=1124),
-    backend.ReceiptItem(name="Pasta Sauce", quantity=2, line_total_cents=698),
-    backend.ReceiptItem(name="Member Discount", quantity=1, line_total_cents=-150),
+    backend.ReceiptItem(name="Organic Bananas", quantity=1, line_total_cents=189, category="groceries"),
+    backend.ReceiptItem(name="Whole Milk 1 gal", quantity=1, line_total_cents=429, category="groceries"),
+    backend.ReceiptItem(name="Sourdough Bread", quantity=1, line_total_cents=599, category="groceries"),
+    backend.ReceiptItem(name="Chicken Breast", quantity=1, line_total_cents=1124, category="groceries"),
+    backend.ReceiptItem(name="Pasta Sauce", quantity=2, line_total_cents=698, category="groceries"),
+    backend.ReceiptItem(name="Vitamin D3 Gummies", quantity=1, line_total_cents=1299, category="health"),
+    backend.ReceiptItem(name="Member Discount", quantity=1, line_total_cents=-150, category="groceries"),
 ]
 
 

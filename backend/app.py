@@ -57,6 +57,7 @@ Rules:
 - `currency` is the ISO 4217 code implied by the symbol/locale ("USD", "INR", ...); use "USD" if you genuinely cannot tell.
 - `date` is YYYY-MM-DD, or an empty string if it is not legible.
 - `category` is the single best fit for the whole receipt, chosen from the allowed values (supermarket -> groceries, restaurant/cafe/bar -> dining, fuel/rideshare/transit -> transport, pharmacy/clinic -> health, bills -> utilities, anything unclear -> other).
+- Each item also has its own `category` from the same allowed values, because one receipt can mix kinds of purchase (a supermarket sells groceries but also vitamins, medicine or toiletries -> health; clothing or kitchenware -> shopping). Categorise each item by what it is. Most items on a receipt will match the receipt's `category`; only differ where the item clearly belongs elsewhere. Discount lines take the category of the item they discount, or the receipt's `category` if unclear.
 - Never invent items. If a line is partly unreadable, include what you can read and add a short note to `notes`. Use `notes` for anything the user should double-check.
 - If the image is not a receipt, set `is_receipt` to false and leave the other fields empty/zero."""
 
@@ -76,8 +77,9 @@ RECEIPT_SCHEMA = {
                     "name": {"type": "string"},
                     "quantity": {"type": "integer"},
                     "line_total_cents": {"type": "integer"},
+                    "category": {"type": "string", "enum": CATEGORIES},
                 },
-                "required": ["name", "quantity", "line_total_cents"],
+                "required": ["name", "quantity", "line_total_cents", "category"],
                 "additionalProperties": False,
             },
         },
@@ -99,6 +101,8 @@ class ReceiptItem(BaseModel):
     name: str
     quantity: int
     line_total_cents: int
+    # Empty means "same as the receipt" -- the app falls back to that.
+    category: str = ""
 
 
 class ParsedReceipt(BaseModel):

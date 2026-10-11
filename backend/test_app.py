@@ -188,3 +188,19 @@ def test_truncated_output_is_a_clean_error(client, monkeypatch):
 def test_garbage_model_output_is_a_clean_error(client, monkeypatch):
     use_fake(monkeypatch, text="definitely not json")
     assert post(client).status_code == 422
+
+
+def test_items_carry_a_category_and_the_schema_requires_it(client, monkeypatch):
+    payload = json.loads(receipt_json())
+    payload["items"][0]["category"] = "health"
+    fake = use_fake(monkeypatch, text=json.dumps(payload))
+    body = post(client).json()
+    assert body["items"][0]["category"] == "health"
+    item_schema = fake.messages.calls[0]["output_config"]["format"]["schema"]["properties"]["items"]["items"]
+    assert item_schema["properties"]["category"]["enum"] == backend.CATEGORIES
+    assert "category" in item_schema["required"]
+
+
+def test_item_without_a_category_still_parses(client, monkeypatch):
+    use_fake(monkeypatch, text=receipt_json())  # fixture items predate item categories
+    assert post(client).json()["items"][0]["category"] == ""

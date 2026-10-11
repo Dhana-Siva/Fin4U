@@ -21,4 +21,6 @@ struct ParsedItem: Decodable {
     let name: String
     let quantity: Int
     let lineTotalCents: Int
+    /// Optional: older backends don't send it.
+    let category: String?
 }

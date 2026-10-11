@@ -214,3 +214,176 @@ final class ImagePrepTests: XCTestCase {
         XCTAssertEqual(result.size.height * result.scale, 800, accuracy: 1)
     }
 }
+
+final class ExpenseMathTests: XCTestCase {
+    private let sam = Participant(id: "sam", name: "Sam")
+    private let alex = Participant(id: "alex", name: "Alex")
+
+    private func shared(with others: [Participant]) -> SplitPlan {
+        SplitPlan(isShared: true, participants: others, customDefault: nil)
+    }
+
+    func testAllocationAlwaysAddsUpToTheTotal() {
+        for total in [0, 1, 99, 100, 1001, 12_345, -150, -1] {
+            for weights in [[1, 1], [1, 1, 1], [3334, 3333, 3333], [7000, 3000], [1, 0, 2]] {
+                XCTAssertEqual(ExpenseMath.allocate(total, weights: weights).reduce(0, +), total,
+                               "total \(total) weights \(weights)")
+            }
+        }
+    }
+
+    func testThreeWayEvenSplitGivesTheOddCentToTheFirstPerson() {
+        let split = ExpenseMath.equalSplit([.me, sam, alex])
+        XCTAssertEqual(split.map(\.basisPoints), [3334, 3333, 3333])
+        XCTAssertEqual(split.reduce(0) { $0 + $1.basisPoints }, 10_000)
+    }
+
+    func testNormalizeDropsUnknownPeopleAndRescales() {
+        let split = [
+            ShareEntry(personID: "me", name: "You", basisPoints: 5000),
+            ShareEntry(personID: "gone", name: "Gone", basisPoints: 3000),
+            ShareEntry(personID: "sam", name: "Sam", basisPoints: 2000),
+        ]
+        let result = ExpenseMath.normalize(split, allowed: [.me, sam])
+        XCTAssertEqual(result?.map(\.personID), ["me", "sam"])
+        XCTAssertEqual(result?.reduce(0) { $0 + $1.basisPoints }, 10_000)
+        XCTAssertNil(ExpenseMath.normalize(split, allowed: [alex]))
+    }
+
+    func testAnUnsharedExpenseIsEntirelyYours() {
+        let plan = SplitPlan()
+        let lines = [LineInput(cents: 1000, category: .groceries, override: nil)]
+        let totals = ExpenseMath.personTotals(plan: plan, lines: lines, taxCents: 80, tipCents: 0)
+        XCTAssertEqual(totals, [PersonTotal(id: "me", name: "You", cents: 1080)])
+    }
+
+    func testEvenSplitDividesItemsTaxAndTipAndAddsUp() {
+        let lines = [
+            LineInput(cents: 1001, category: .dining, override: nil),
+            LineInput(cents: 500, category: .dining, override: nil),
+        ]
+        let totals = ExpenseMath.personTotals(plan: shared(with: [sam]), lines: lines, taxCents: 133, tipCents: 301)
+        XCTAssertEqual(totals.reduce(0) { $0 + $1.cents }, 1001 + 500 + 133 + 301)
+        XCTAssertEqual(totals.count, 2)
+    }
+
+    func testAnItemSplitOnlyWithSamIsNotChargedToYou() {
+        let sharedOnly = [ShareEntry(personID: "sam", name: "Sam", basisPoints: 10_000)]
+        let lines = [
+            LineInput(cents: 1000, category: .groceries, override: nil),   // even: 500 / 500
+            LineInput(cents: 600, category: .groceries, override: sharedOnly),  // all Sam
+        ]
+        let totals = ExpenseMath.personTotals(plan: shared(with: [sam]), lines: lines, taxCents: 0, tipCents: 0)
+        XCTAssertEqual(totals.first { $0.id == "me" }?.cents, 500)
+        XCTAssertEqual(totals.first { $0.id == "sam" }?.cents, 1100)
+    }
+
+    func testTaxFollowsWhoCarriesTheItems() {
+        // You carry 25% of the items, so you carry 25% of the tax.
+        let custom = [
+            ShareEntry(personID: "me", name: "You", basisPoints: 2500),
+            ShareEntry(personID: "sam", name: "Sam", basisPoints: 7500),
+        ]
+        let lines = [LineInput(cents: 2000, category: .dining, override: custom)]
+        let totals = ExpenseMath.personTotals(plan: shared(with: [sam]), lines: lines, taxCents: 200, tipCents: 0)
+        XCTAssertEqual(totals.first { $0.id == "me" }?.cents, 500 + 50)
+        XCTAssertEqual(totals.first { $0.id == "sam" }?.cents, 1500 + 150)
+    }
+
+    func testTotalsStillAddUpWithADiscountLine() {
+        let lines = [
+            LineInput(cents: 1299, category: .health, override: nil),
+            LineInput(cents: -150, category: .groceries, override: nil),
+        ]
+        let totals = ExpenseMath.personTotals(plan: shared(with: [sam, alex]), lines: lines, taxCents: 77, tipCents: 0)
+        XCTAssertEqual(totals.reduce(0) { $0 + $1.cents }, 1299 - 150 + 77)
+    }
+
+    func testCategoryTotalsAddUpToYourTotalAndKeepMixedReceiptsApart() {
+        let lines = [
+            LineInput(cents: 3000, category: .groceries, override: nil),
+            LineInput(cents: 1000, category: .health, override: nil),
+        ]
+        let byCategory = ExpenseMath.categoryTotals(
+            for: "me", plan: SplitPlan(), lines: lines, taxCents: 400, tipCents: 0, receiptCategory: .groceries
+        )
+        XCTAssertEqual(byCategory.values.reduce(0, +), 4400)
+        XCTAssertEqual(byCategory[.groceries], 3000 + 300)  // tax follows spend 3:1
+        XCTAssertEqual(byCategory[.health], 1000 + 100)
+    }
+
+    func testOnlyYourShareReachesYourCategoryTotals() {
+        let lines = [
+            LineInput(cents: 2000, category: .groceries, override: nil),
+            LineInput(cents: 1000, category: .health, override: [ShareEntry(personID: "sam", name: "Sam", basisPoints: 10_000)]),
+        ]
+        let mine = ExpenseMath.categoryTotals(
+            for: "me", plan: shared(with: [sam]), lines: lines, taxCents: 0, tipCents: 0, receiptCategory: .groceries
+        )
+        XCTAssertEqual(mine, [.groceries: 1000])  // the health item was all Sam's
+    }
+
+    func testAReceiptWithOnlyATotalFallsBackToTheReceiptCategory() {
+        let byCategory = ExpenseMath.categoryTotals(
+            for: "me", plan: SplitPlan(), lines: [], taxCents: 0, tipCents: 2500, receiptCategory: .dining
+        )
+        XCTAssertEqual(byCategory, [.dining: 2500])
+    }
+
+    func testDescribeReadsNaturally() {
+        XCTAssertEqual(ExpenseMath.describe(ExpenseMath.equalSplit([.me, sam])), "Even · You, Sam")
+        XCTAssertEqual(ExpenseMath.describe([ShareEntry(personID: "sam", name: "Sam", basisPoints: 10_000)]), "Sam only")
+        XCTAssertEqual(
+            ExpenseMath.describe([
+                ShareEntry(personID: "me", name: "You", basisPoints: 6000),
+                ShareEntry(personID: "sam", name: "Sam", basisPoints: 4000),
+            ]),
+            "You 60% · Sam 40%"
+        )
+        XCTAssertEqual(ExpenseMath.percentText(3333), "33.33%")
+    }
+
+    func testChangingThePeopleResetsAHandEditedDefault() {
+        var plan = shared(with: [sam])
+        plan.customDefault = [ShareEntry(personID: "me", name: "You", basisPoints: 7000),
+                              ShareEntry(personID: "sam", name: "Sam", basisPoints: 3000)]
+        plan.toggle(alex)
+        XCTAssertNil(plan.customDefault)
+        XCTAssertEqual(plan.defaultSplit.map(\.basisPoints), [3334, 3333, 3333])
+    }
+}
+
+final class ItemCategoryTests: XCTestCase {
+    private func parsed(itemCategories: [String?]) throws -> ParsedReceipt {
+        let items = itemCategories.enumerated().map { index, category in
+            var item: [String: Any] = ["name": "Item \(index)", "quantity": 1, "line_total_cents": 100]
+            if let category { item["category"] = category }
+            return item
+        }
+        let json: [String: Any] = [
+            "is_receipt": true, "merchant": "Shoprite", "date": "2026-10-09", "currency": "USD",
+            "category": "groceries", "items": items, "subtotal_cents": 100 * items.count,
+            "tax_cents": 0, "tip_cents": 0, "total_cents": 100 * items.count, "notes": [],
+        ]
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(ParsedReceipt.self, from: JSONSerialization.data(withJSONObject: json))
+    }
+
+    func testItemsKeepTheirOwnCategoryAndFallBackToTheReceipts() throws {
+        let draft = ExpenseDraft(parsed: try parsed(itemCategories: ["health", nil, "", "dining"]), image: nil)
+        XCTAssertEqual(draft.items.map(\.category), [.health, .groceries, .groceries, .dining])
+    }
+
+    func testChoosingAReceiptCategoryAppliesToEveryItem() throws {
+        let draft = ExpenseDraft(parsed: try parsed(itemCategories: ["health", "groceries"]), image: nil)
+        draft.setCategoryForAll(.shopping)
+        XCTAssertEqual(draft.category, .shopping)
+        XCTAssertEqual(draft.items.map(\.category), [.shopping, .shopping])
+    }
+
+    func testAnUnsharedDraftIsAllYours() throws {
+        let draft = ExpenseDraft(parsed: try parsed(itemCategories: [nil, nil]), image: nil)
+        XCTAssertEqual(draft.personTotals.map(\.cents), [draft.totalCents])
+    }
+}

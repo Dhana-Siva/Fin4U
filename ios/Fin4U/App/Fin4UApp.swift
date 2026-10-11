@@ -17,6 +17,6 @@ struct Fin4UApp: App {
                 DisclosureView { acknowledged = true }
             }
         }
-        .modelContainer(for: [Expense.self, ExpenseItem.self])
+        .modelContainer(for: [Expense.self, ExpenseItem.self, Person.self])
     }
 }
