@@ -18,6 +18,12 @@ struct CentsField: View {
             .monospacedDigit()
             .foregroundStyle(isValid ? Color.primary : Color.red)
             .focused($focused)
+            // Select the whole value on focus so typing replaces it (amounts
+            // and percentages are usually corrected, not appended to).
+            .onReceive(NotificationCenter.default.publisher(for: UITextField.textDidBeginEditingNotification)) { note in
+                guard let field = note.object as? UITextField else { return }
+                DispatchQueue.main.async { field.selectAll(nil) }
+            }
             .onAppear { text = Money.plain(cents) }
             .onChange(of: text) { _, newText in
                 if newText.trimmingCharacters(in: .whitespaces).isEmpty {

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		0FE7A68F7D8B27B57C86A21E /* CentsField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5728FE4436C7348F8040789 /* CentsField.swift */; };
 		1F9728010D49D6D7AAEE7103 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7940272E3D7237720127A350 /* Assets.xcassets */; };
-		466745B1985178E8261E20F2 /* SplitEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81110BD8B3F2F44409518AAE /* SplitEditorView.swift */; };
 		571AE505148F55ED62965F73 /* ExpenseCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CBDF0F0B6FA4887FECA9AD /* ExpenseCategory.swift */; };
 		5A401283EBED08048CF30DAB /* Fin4UTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A62C392F0E64975316F9EDD /* Fin4UTests.swift */; };
 		74320BB82A583018E2CB2138 /* Reconciliation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115D8796BEAC28563252884A /* Reconciliation.swift */; };
@@ -54,7 +53,6 @@
 		729D227C756E94EC36508A62 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		7940272E3D7237720127A350 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7FCF35ACA0B27A295A750E50 /* ImagePrep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePrep.swift; sourceTree = "<group>"; };
-		81110BD8B3F2F44409518AAE /* SplitEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitEditorView.swift; sourceTree = "<group>"; };
 		89814D7083EE7A8DF906C375 /* Person.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Person.swift; sourceTree = "<group>"; };
 		92D32EAC5138C9EC39FB66B3 /* DocumentScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerView.swift; sourceTree = "<group>"; };
 		9E85C7259B1E1B2A65FFB934 /* Fin4UApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fin4UApp.swift; sourceTree = "<group>"; };
@@ -65,7 +63,7 @@
 		F10BEFD57D544C442B76F4E3 /* ReceiptAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptAPI.swift; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_DA6B1275-74E0-4B3C-9CB2-BAD72D654B11" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_F85AD621-342B-48F3-8590-E1E3752533AF" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -174,7 +172,6 @@
 			children = (
 				E5728FE4436C7348F8040789 /* CentsField.swift */,
 				156370F06E719A82FE10B7E5 /* ReviewView.swift */,
-				81110BD8B3F2F44409518AAE /* SplitEditorView.swift */,
 			);
 			path = Review;
 			sourceTree = "<group>";
@@ -195,10 +192,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_707D6AE8-D778-4028-B414-C9154E0BCD1A" /* ios */ = {
+		"TEMP_F8C30A5E-5B4D-48F1-B852-8F66676DD97B" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_DA6B1275-74E0-4B3C-9CB2-BAD72D654B11" /* Secrets.xcconfig */,
+				"TEMP_F85AD621-342B-48F3-8590-E1E3752533AF" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -319,7 +316,6 @@
 				9EC72537E0B8679AD13E3AA1 /* ReviewView.swift in Sources */,
 				CE248BC55EB3F3E1A46AFBC4 /* ScanFlowView.swift in Sources */,
 				ABA6CB4A5892745CAF09C217 /* Split.swift in Sources */,
-				466745B1985178E8261E20F2 /* SplitEditorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,7 +372,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_DA6B1275-74E0-4B3C-9CB2-BAD72D654B11" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_F85AD621-342B-48F3-8590-E1E3752533AF" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -440,7 +436,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_DA6B1275-74E0-4B3C-9CB2-BAD72D654B11" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_F85AD621-342B-48F3-8590-E1E3752533AF" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

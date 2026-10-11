@@ -50,7 +50,8 @@ struct SplitPlan: Equatable {
 
     var defaultSplit: [ShareEntry] {
         guard isShared else { return meOnly }
-        if let custom = customDefault, let normalized = ExpenseMath.normalize(custom, allowed: everyone) {
+        if let custom = customDefault, mentionsOnlyParticipants(custom),
+           let normalized = ExpenseMath.normalize(custom, allowed: everyone) {
             return normalized
         }
         return ExpenseMath.equalSplit(everyone)
@@ -59,14 +60,54 @@ struct SplitPlan: Equatable {
     /// The split that actually applies to a line with this override.
     func resolve(_ override: [ShareEntry]?) -> [ShareEntry] {
         guard isShared else { return meOnly }
-        if let override, let normalized = ExpenseMath.normalize(override, allowed: everyone) {
+        if let override, mentionsOnlyParticipants(override),
+           let normalized = ExpenseMath.normalize(override, allowed: everyone) {
             return normalized
         }
         return defaultSplit
     }
 
+    /// A split that names someone no longer in the expense is stale -- e.g.
+    /// after switching who it's shared with -- so it's ignored outright
+    /// rather than half-applied to whoever is left.
+    private func mentionsOnlyParticipants(_ split: [ShareEntry]) -> Bool {
+        let ids = Set(everyone.map(\.id))
+        return split.allSatisfy { ids.contains($0.personID) }
+    }
+
     func isParticipating(_ person: Participant) -> Bool {
         participants.contains { $0.id == person.id }
+    }
+
+    /// For now an expense is shared with one other person.
+    var other: Participant? { participants.first }
+
+    /// Picks the person to share with, replacing anyone chosen before;
+    /// picking them again clears it.
+    mutating func selectOnly(_ person: Participant) {
+        participants = isParticipating(person) ? [] : [person]
+        customDefault = nil
+    }
+
+    /// The other person's share (basis points) in a resolved split.
+    func otherShare(in split: [ShareEntry]) -> Int {
+        guard let other else { return 0 }
+        return split.first { $0.personID == other.id }?.basisPoints ?? 0
+    }
+
+    /// A two-way split where the other person pays `basisPoints` and you pay
+    /// the rest. Clamped to 0...100%.
+    func split(otherShare basisPoints: Int) -> [ShareEntry] {
+        guard let other else { return meOnly }
+        let theirs = min(max(basisPoints, 0), ExpenseMath.whole)
+        var entries: [ShareEntry] = []
+        if theirs < ExpenseMath.whole {
+            entries.append(ShareEntry(personID: Participant.me.id, name: Participant.me.name, basisPoints: ExpenseMath.whole - theirs))
+        }
+        if theirs > 0 {
+            entries.append(ShareEntry(personID: other.id, name: other.name, basisPoints: theirs))
+        }
+        return entries
     }
 
     /// Adding or removing someone invalidates a hand-edited default (it would

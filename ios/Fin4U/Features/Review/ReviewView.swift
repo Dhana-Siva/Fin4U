@@ -11,19 +11,6 @@ struct ReviewView: View {
     @Query(sort: \Person.name) private var people: [Person]
     @State private var showingPhoto = false
     @State private var newPersonName = ""
-    @State private var splitTarget: SplitTarget?
-
-    private enum SplitTarget: Identifiable {
-        case receipt
-        case item(UUID)
-
-        var id: String {
-            switch self {
-            case .receipt: "receipt"
-            case .item(let id): id.uuidString
-            }
-        }
-    }
 
     var body: some View {
         Form {
@@ -73,8 +60,15 @@ struct ReviewView: View {
                         }
                         HStack(spacing: 8) {
                             categoryChip($item.category)
-                            if draft.plan.isShared {
-                                splitChip(for: item)
+                            Spacer(minLength: 4)
+                            if let other = draft.plan.other {
+                                shareColumn(
+                                    name: other.name,
+                                    basisPoints: Binding(
+                                        get: { draft.otherShare(of: item) },
+                                        set: { draft.setOtherShare($0, of: item.id) }
+                                    )
+                                )
                             }
                         }
                     }
@@ -89,9 +83,11 @@ struct ReviewView: View {
             } header: {
                 Text("Items")
             } footer: {
-                Text(draft.plan.isShared
-                     ? "Tap an item's category or split to change it."
-                     : "Tap an item's category to change it, for example vitamins on a grocery receipt.")
+                if let other = draft.plan.other {
+                    Text("The % on each item is how much \(other.name) pays of it. Tap a category to change it.")
+                } else {
+                    Text("Tap an item's category to change it, for example vitamins on a grocery receipt.")
+                }
             }
 
             Section("Totals") {
@@ -165,9 +161,6 @@ struct ReviewView: View {
                 .disabled(!draft.canSave)
             }
         }
-        .sheet(item: $splitTarget) { target in
-            splitEditor(for: target)
-        }
         .sheet(isPresented: $showingPhoto) {
             if let data = draft.receiptImage, let image = UIImage(data: data) {
                 NavigationStack {
@@ -197,7 +190,7 @@ struct ReviewView: View {
             if draft.plan.isShared {
                 ForEach(people) { person in
                     Button {
-                        draft.plan.toggle(person.participant)
+                        draft.plan.selectOnly(person.participant)
                     } label: {
                         HStack {
                             Text(person.name).foregroundStyle(.primary)
@@ -220,30 +213,24 @@ struct ReviewView: View {
                         .buttonStyle(.borderless)
                 }
 
-                if !draft.plan.participants.isEmpty {
-                    Button {
-                        splitTarget = .receipt
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Default split").foregroundStyle(.primary)
-                                Text(ExpenseMath.describe(draft.plan.defaultSplit))
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.tertiary)
-                        }
+                if let other = draft.plan.other {
+                    HStack {
+                        Text("\(other.name) pays, by default")
+                        Spacer()
+                        percentField(Binding(
+                            get: { draft.defaultOtherShare },
+                            set: { draft.setDefaultOtherShare($0) }
+                        ))
                     }
                 }
             }
         } footer: {
             if draft.plan.isShared {
-                Text(draft.plan.participants.isEmpty
-                     ? "Add the people you're splitting with and tick them. Swipe a name to remove it."
-                     : "Everything is split by the default unless you change an item's split.")
+                Text(draft.plan.other == nil
+                     ? "Tick the person you're splitting with, or add them. Swipe a name to remove it."
+                     : "Applies to every item. Change the % on an item below to override it.")
             } else {
-                Text("Turn on to split this receipt with roommates or friends.")
+                Text("Turn on to split this receipt with a roommate or friend.")
             }
         }
     }
@@ -253,19 +240,19 @@ struct ReviewView: View {
         guard !name.isEmpty else { return }
         newPersonName = ""
         if let existing = people.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
-            if !draft.plan.isParticipating(existing.participant) { draft.plan.toggle(existing.participant) }
+            if !draft.plan.isParticipating(existing.participant) { draft.plan.selectOnly(existing.participant) }
             return
         }
         let person = Person(name: name)
         context.insert(person)
         try? context.save()
-        draft.plan.toggle(person.participant)
+        draft.plan.selectOnly(person.participant)
     }
 
     private func deletePeople(at offsets: IndexSet) {
         for index in offsets {
             let person = people[index]
-            if draft.plan.isParticipating(person.participant) { draft.plan.toggle(person.participant) }
+            if draft.plan.isParticipating(person.participant) { draft.plan.selectOnly(person.participant) }
             context.delete(person)
         }
         try? context.save()
@@ -284,17 +271,34 @@ struct ReviewView: View {
         .buttonStyle(.borderless)
     }
 
-    private func splitChip(for item: DraftItem) -> some View {
-        Button {
-            splitTarget = .item(item.id)
-        } label: {
-            chip(
-                ExpenseMath.describe(draft.split(for: item)),
-                symbol: "person.2.fill",
-                tint: item.split == nil ? .secondary : .accentColor
-            )
+    /// "Sam  [ 50.00 ] %" -- who the item is shared with and their share.
+    private func shareColumn(name: String, basisPoints: Binding<Int>) -> some View {
+        HStack(spacing: 6) {
+            Text(name)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            percentField(basisPoints)
         }
-        .buttonStyle(.borderless)
+    }
+
+    private func percentField(_ basisPoints: Binding<Int>) -> some View {
+        // CentsField works in hundredths, which is exactly basis points:
+        // 5000 -> "50.00".
+        HStack(spacing: 2) {
+            CentsField(cents: Binding(
+                get: { basisPoints.wrappedValue },
+                set: { basisPoints.wrappedValue = min(max($0, 0), ExpenseMath.whole) }
+            ))
+            .frame(width: 64)
+            .font(.footnote)
+            Text("%").font(.footnote).foregroundStyle(.secondary)
+        }
+        // Without this the "%" is the first thing a tight form row squeezes out.
+        .fixedSize()
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color.accentColor.opacity(0.12), in: Capsule())
     }
 
     private func chip(_ text: String, symbol: String, tint: Color) -> some View {
@@ -305,35 +309,6 @@ struct ReviewView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(tint.opacity(0.12), in: Capsule())
-    }
-
-    @ViewBuilder
-    private func splitEditor(for target: SplitTarget) -> some View {
-        switch target {
-        case .receipt:
-            SplitEditorView(
-                title: "Default split",
-                subtitle: "Applies to every item that doesn't have its own split.",
-                everyone: draft.plan.everyone,
-                current: draft.plan.defaultSplit,
-                canUseDefault: false
-            ) { entries in
-                draft.plan.customDefault = entries
-            }
-        case .item(let id):
-            if let index = draft.items.firstIndex(where: { $0.id == id }) {
-                SplitEditorView(
-                    title: draft.items[index].name.isEmpty ? "Item split" : draft.items[index].name,
-                    subtitle: "Who shares this item, and how much each pays.",
-                    everyone: draft.plan.everyone,
-                    current: draft.split(for: draft.items[index]),
-                    canUseDefault: true
-                ) { entries in
-                    // An override identical to the default is just the default.
-                    draft.items[index].split = entries == draft.plan.defaultSplit ? nil : entries
-                }
-            }
-        }
     }
 
     private func totalRow(_ title: String, _ cents: Int, bold: Bool = false) -> some View {

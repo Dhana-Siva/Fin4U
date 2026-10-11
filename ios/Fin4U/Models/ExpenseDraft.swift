@@ -154,6 +154,24 @@ final class ExpenseDraft {
 
     func split(for item: DraftItem) -> [ShareEntry] { plan.resolve(item.split) }
 
+    /// What share of an item the other person pays, in basis points.
+    func otherShare(of item: DraftItem) -> Int { plan.otherShare(in: plan.resolve(item.split)) }
+
+    /// Sets the other person's share of one item. Matching the receipt's
+    /// default clears the override, so the item keeps following the default.
+    func setOtherShare(_ basisPoints: Int, of itemID: UUID) {
+        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
+        let split = plan.split(otherShare: basisPoints)
+        items[index].split = split == plan.defaultSplit ? nil : split
+    }
+
+    var defaultOtherShare: Int { plan.otherShare(in: plan.defaultSplit) }
+
+    /// Changes the share used by every item that doesn't have its own.
+    func setDefaultOtherShare(_ basisPoints: Int) {
+        plan.customDefault = plan.split(otherShare: basisPoints)
+    }
+
     // MARK: Persistence
 
     func save(in context: ModelContext) {

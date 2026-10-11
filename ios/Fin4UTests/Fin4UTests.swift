@@ -387,3 +387,76 @@ final class ItemCategoryTests: XCTestCase {
         XCTAssertEqual(draft.personTotals.map(\.cents), [draft.totalCents])
     }
 }
+
+final class OnePersonShareTests: XCTestCase {
+    private let sam = Participant(id: "sam", name: "Sam")
+    private let alex = Participant(id: "alex", name: "Alex")
+
+    private func draft(sharedWith person: Participant? = nil) -> ExpenseDraft {
+        let d = ExpenseDraft(items: [
+            DraftItem(name: "Pizza", quantity: 1, cents: 2000, category: .dining),
+            DraftItem(name: "Soda", quantity: 1, cents: 500, category: .dining),
+        ], taxCents: 250)
+        d.plan.isShared = true
+        if let person { d.plan.selectOnly(person) }
+        return d
+    }
+
+    func testPickingSomeoneElseReplacesThePerson() {
+        var plan = SplitPlan(isShared: true)
+        plan.selectOnly(sam)
+        plan.selectOnly(alex)
+        XCTAssertEqual(plan.participants, [alex])
+        plan.selectOnly(alex)  // tapping the chosen person clears it
+        XCTAssertNil(plan.other)
+    }
+
+    func testTwoWaySplitsAreClampedAndAddUp() {
+        var plan = SplitPlan(isShared: true)
+        plan.selectOnly(sam)
+        XCTAssertEqual(plan.split(otherShare: 3000).map(\.basisPoints), [7000, 3000])
+        XCTAssertEqual(plan.split(otherShare: 0).map(\.personID), ["me"])
+        XCTAssertEqual(plan.split(otherShare: 10_000).map(\.personID), ["sam"])
+        XCTAssertEqual(plan.split(otherShare: 25_000).map(\.personID), ["sam"])  // over 100% clamps
+        XCTAssertEqual(plan.split(otherShare: -5).map(\.personID), ["me"])
+    }
+
+    func testEveryItemStartsAtFiftyPercent() {
+        let d = draft(sharedWith: sam)
+        XCTAssertEqual(d.defaultOtherShare, 5000)
+        XCTAssertEqual(d.items.map { d.otherShare(of: $0) }, [5000, 5000])
+    }
+
+    func testChangingOneItemLeavesTheOthersAlone() {
+        let d = draft(sharedWith: sam)
+        d.setOtherShare(10_000, of: d.items[1].id)  // soda is all Sam's
+        XCTAssertEqual(d.otherShare(of: d.items[0]), 5000)
+        XCTAssertEqual(d.otherShare(of: d.items[1]), 10_000)
+        let totals = d.personTotals
+        XCTAssertEqual(totals.reduce(0) { $0 + $1.cents }, d.totalCents)
+        XCTAssertEqual(totals.first { $0.id == "me" }?.cents, 1000 + 100)  // half the pizza + 40% of the tax (1000 of 2500)
+    }
+
+    func testSettingAnItemBackToTheDefaultClearsItsOverride() {
+        let d = draft(sharedWith: sam)
+        d.setOtherShare(8000, of: d.items[0].id)
+        XCTAssertNotNil(d.items[0].split)
+        d.setOtherShare(5000, of: d.items[0].id)
+        XCTAssertNil(d.items[0].split)
+    }
+
+    func testChangingTheDefaultMovesEveryItemWithoutAnOverride() {
+        let d = draft(sharedWith: sam)
+        d.setOtherShare(10_000, of: d.items[1].id)
+        d.setDefaultOtherShare(2500)
+        XCTAssertEqual(d.otherShare(of: d.items[0]), 2500)
+        XCTAssertEqual(d.otherShare(of: d.items[1]), 10_000)  // kept its own
+    }
+
+    func testSwitchingPeopleDropsTheOldOverrides() {
+        let d = draft(sharedWith: sam)
+        d.setOtherShare(8000, of: d.items[0].id)
+        d.plan.selectOnly(alex)
+        XCTAssertEqual(d.otherShare(of: d.items[0]), 5000)  // back to the default for Alex
+    }
+}
