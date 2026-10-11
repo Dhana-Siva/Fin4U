@@ -61,18 +61,32 @@ struct ReviewView: View {
                         HStack(spacing: 8) {
                             categoryChip($item.category)
                             Spacer(minLength: 4)
-                            if let other = draft.plan.other {
-                                shareColumn(
-                                    name: other.name,
-                                    basisPoints: Binding(
-                                        get: { draft.otherShare(of: item) },
-                                        set: { draft.setOtherShare($0, of: item.id) }
+                            if let other = draft.plan.other, draft.plan.itemize {
+                                Toggle("Share", isOn: Binding(
+                                    get: { draft.isShared(item) },
+                                    set: { draft.setItemShared($0, of: item.id) }
+                                ))
+                                .labelsHidden()
+                                .fixedSize()
+                                if draft.isShared(item) {
+                                    shareColumn(
+                                        name: other.name,
+                                        basisPoints: Binding(
+                                            get: { draft.otherShare(of: item) },
+                                            set: { draft.setOtherShare($0, of: item.id) }
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                         if let other = draft.plan.other {
-                            splitBreakdown(for: item, otherName: other.name)
+                            if draft.plan.itemize && !draft.isShared(item) {
+                                Text("Not shared -- all yours")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                splitBreakdown(for: item, otherName: other.name)
+                            }
                         }
                     }
                 }
@@ -87,7 +101,9 @@ struct ReviewView: View {
                 Text("Items")
             } footer: {
                 if let other = draft.plan.other {
-                    Text("The % on each item is how much \(other.name) pays of it. Tap a category to change it.")
+                    Text(draft.plan.itemize
+                         ? "Switch on Share for the items you're splitting with \(other.name), then set their %. Tap a category to change it."
+                         : "Everything is split the same way. Tap a category to change it.")
                 } else {
                     Text("Tap an item's category to change it, for example vitamins on a grocery receipt.")
                 }
@@ -217,8 +233,17 @@ struct ReviewView: View {
                 }
 
                 if let other = draft.plan.other {
+                    Picker("Split", selection: Binding(
+                        get: { draft.plan.itemize },
+                        set: { draft.setItemize($0) }
+                    )) {
+                        Text("Share all items").tag(false)
+                        Text("Itemize").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+
                     HStack {
-                        Text("\(other.name) pays, by default")
+                        Text(draft.plan.itemize ? "\(other.name) pays, when shared" : "\(other.name) pays")
                         Spacer()
                         percentField(Binding(
                             get: { draft.defaultOtherShare },
@@ -231,7 +256,9 @@ struct ReviewView: View {
             if draft.plan.isShared {
                 Text(draft.plan.other == nil
                      ? "Tick the person you're splitting with, or add them. Swipe a name to remove it."
-                     : "Applies to every item. Change the % on an item below to override it.")
+                     : (draft.plan.itemize
+                        ? "Choose which items are shared below. This % is what each one starts at."
+                        : "This % applies to every item."))
             } else {
                 Text("Turn on to split this receipt with a roommate or friend.")
             }

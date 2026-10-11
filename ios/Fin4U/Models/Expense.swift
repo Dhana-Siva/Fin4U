@@ -107,6 +107,7 @@ extension Expense {
         if let data = splitData, let snapshot = try? JSONDecoder().decode(SplitSnapshot.self, from: data) {
             plan.participants = snapshot.participants
             plan.customDefault = snapshot.defaultSplit
+            plan.itemize = snapshot.itemize ?? false
         }
         return plan
     }

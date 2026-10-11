@@ -41,6 +41,9 @@ struct SplitPlan: Equatable {
     var participants: [Participant] = []
     /// A hand-edited receipt-wide split; nil means an even split.
     var customDefault: [ShareEntry]?
+    /// false: one split covers every item ("share all"). true: each item is
+    /// either shared or not, on its own -- items default to *not* shared.
+    var itemize = false
 
     var everyone: [Participant] { [.me] + participants }
 
@@ -64,7 +67,8 @@ struct SplitPlan: Equatable {
            let normalized = ExpenseMath.normalize(override, allowed: everyone) {
             return normalized
         }
-        return defaultSplit
+        // Itemized: an item with no split of its own isn't shared.
+        return itemize ? meOnly : defaultSplit
     }
 
     /// A split that names someone no longer in the expense is stale -- e.g.
@@ -127,6 +131,8 @@ struct SplitPlan: Equatable {
 struct SplitSnapshot: Codable {
     var participants: [Participant]
     var defaultSplit: [ShareEntry]?
+    /// Optional so expenses saved before itemizing existed still decode.
+    var itemize: Bool?
 }
 
 enum ExpenseMath {

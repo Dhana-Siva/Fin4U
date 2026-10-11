@@ -162,7 +162,29 @@ final class ExpenseDraft {
     func setOtherShare(_ basisPoints: Int, of itemID: UUID) {
         guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
         let split = plan.split(otherShare: basisPoints)
-        items[index].split = split == plan.defaultSplit ? nil : split
+        if plan.itemize {
+            // Here "no split of its own" means not shared, so 0% clears it and
+            // anything else is stored even when it equals the default.
+            items[index].split = basisPoints <= 0 ? nil : split
+        } else {
+            items[index].split = split == plan.defaultSplit ? nil : split
+        }
+    }
+
+    func isShared(_ item: DraftItem) -> Bool { otherShare(of: item) > 0 }
+
+    /// Itemize mode: switch one item between shared (at the default %) and
+    /// just yours.
+    func setItemShared(_ shared: Bool, of itemID: UUID) {
+        let basisPoints = defaultOtherShare > 0 ? defaultOtherShare : ExpenseMath.whole / 2
+        setOtherShare(shared ? basisPoints : 0, of: itemID)
+    }
+
+    /// Share all items at one % vs. choosing item by item. Going back to
+    /// "all" drops any per-item choices so nothing stale lingers.
+    func setItemize(_ on: Bool) {
+        plan.itemize = on
+        if !on { for index in items.indices { items[index].split = nil } }
     }
 
     /// What each side pays for one item, in cents: (you, the other person).
@@ -204,7 +226,7 @@ final class ExpenseDraft {
         // means everything is yours again, so no stale splits are kept.
         expense.isShared = plan.isShared
         expense.splitData = plan.isShared
-            ? try? JSONEncoder().encode(SplitSnapshot(participants: plan.participants, defaultSplit: plan.customDefault))
+            ? try? JSONEncoder().encode(SplitSnapshot(participants: plan.participants, defaultSplit: plan.customDefault, itemize: plan.itemize))
             : nil
 
         for old in expense.items { context.delete(old) }

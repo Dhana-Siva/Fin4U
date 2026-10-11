@@ -480,3 +480,84 @@ final class OnePersonShareTests: XCTestCase {
         XCTAssertEqual(d.otherShare(of: d.items[0]), 5000)  // back to the default for Alex
     }
 }
+
+final class ItemizeTests: XCTestCase {
+    private let sam = Participant(id: "sam", name: "Sam")
+
+    private func draft() -> ExpenseDraft {
+        let d = ExpenseDraft(items: [
+            DraftItem(name: "Pizza", quantity: 1, cents: 2000, category: .dining),
+            DraftItem(name: "My salad", quantity: 1, cents: 1000, category: .dining),
+            DraftItem(name: "Soda", quantity: 1, cents: 500, category: .dining),
+        ], taxCents: 350)
+        d.plan.isShared = true
+        d.plan.selectOnly(sam)
+        return d
+    }
+
+    func testShareAllSharesEveryItemAtOnePercentage() {
+        let d = draft()
+        d.setDefaultOtherShare(2500)
+        XCTAssertEqual(d.items.map { d.otherShare(of: $0) }, [2500, 2500, 2500])
+    }
+
+    func testItemizedItemsStartUnshared() {
+        let d = draft()
+        d.setItemize(true)
+        XCTAssertEqual(d.items.map { d.isShared($0) }, [false, false, false])
+        XCTAssertEqual(d.personTotals.first { $0.id == "sam" }?.cents, 0)
+        XCTAssertEqual(d.personTotals.first { $0.id == "me" }?.cents, d.totalCents)
+    }
+
+    func testOnlyTheSharedItemsAreSplit() {
+        let d = draft()
+        d.setItemize(true)
+        d.setItemShared(true, of: d.items[0].id)  // pizza, at the 50% default
+        XCTAssertTrue(d.isShared(d.items[0]))
+        XCTAssertEqual(d.otherShare(of: d.items[0]), 5000)
+        XCTAssertFalse(d.isShared(d.items[1]))
+        let totals = d.personTotals
+        XCTAssertEqual(totals.reduce(0) { $0 + $1.cents }, d.totalCents)
+        // Sam: half the pizza (1000) + tax in proportion (1000 of 3500 items x 350 = 100).
+        XCTAssertEqual(totals.first { $0.id == "sam" }?.cents, 1100)
+    }
+
+    func testASharedItemKeepsItsOwnPercentageEvenIfItMatchesTheDefault() {
+        let d = draft()
+        d.setItemize(true)
+        d.setItemShared(true, of: d.items[0].id)
+        d.setOtherShare(5000, of: d.items[0].id)  // same as default, still shared
+        XCTAssertTrue(d.isShared(d.items[0]))
+        d.setOtherShare(2000, of: d.items[0].id)
+        XCTAssertEqual(d.otherShare(of: d.items[0]), 2000)
+    }
+
+    func testTurningAnItemOffMakesItAllYours() {
+        let d = draft()
+        d.setItemize(true)
+        d.setItemShared(true, of: d.items[2].id)
+        d.setItemShared(false, of: d.items[2].id)
+        XCTAssertFalse(d.isShared(d.items[2]))
+        XCTAssertEqual(d.amounts(of: d.items[2]).you, 500)
+    }
+
+    func testReturningToShareAllClearsPerItemChoices() {
+        let d = draft()
+        d.setItemize(true)
+        d.setItemShared(true, of: d.items[0].id)
+        d.setItemize(false)
+        XCTAssertTrue(d.items.allSatisfy { $0.split == nil })
+        XCTAssertEqual(d.items.map { d.otherShare(of: $0) }, [5000, 5000, 5000])
+    }
+
+    func testItemizeSurvivesSavingAsASnapshot() throws {
+        var plan = SplitPlan(isShared: true, participants: [sam])
+        plan.itemize = true
+        let data = try JSONEncoder().encode(SplitSnapshot(participants: plan.participants, defaultSplit: nil, itemize: plan.itemize))
+        let back = try JSONDecoder().decode(SplitSnapshot.self, from: data)
+        XCTAssertEqual(back.itemize, true)
+        // An expense saved before this existed has no `itemize` key at all.
+        let old = try JSONDecoder().decode(SplitSnapshot.self, from: Data(#"{"participants":[],"defaultSplit":null}"#.utf8))
+        XCTAssertNil(old.itemize)
+    }
+}
