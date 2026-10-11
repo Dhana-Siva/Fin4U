@@ -17,6 +17,7 @@ def receipt_json(**overrides) -> str:
         "merchant": "Corner Cafe",
         "date": "2026-10-03",
         "currency": "USD",
+        "category": "dining",
         "items": [
             {"name": "Latte", "quantity": 2, "line_total_cents": 900},
             {"name": "Bagel", "quantity": 1, "line_total_cents": 350},
@@ -89,6 +90,14 @@ def test_parses_and_reconciles(client, monkeypatch):
     assert call["output_config"]["format"]["type"] == "json_schema"
     image_block = call["messages"][0]["content"][0]
     assert image_block["source"]["media_type"] == "image/jpeg"
+
+
+def test_returns_category_and_constrains_it_in_the_schema(client, monkeypatch):
+    fake = use_fake(monkeypatch, text=receipt_json(category="groceries"))
+    assert post(client).json()["category"] == "groceries"
+    schema = fake.messages.calls[0]["output_config"]["format"]["schema"]
+    assert schema["properties"]["category"]["enum"] == backend.CATEGORIES
+    assert "category" in schema["required"]
 
 
 def test_sniffs_media_type_from_bytes_not_filename(client, monkeypatch):

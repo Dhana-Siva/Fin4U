@@ -33,6 +33,14 @@ MODEL = os.environ.get("RECEIPT_MODEL", "claude-opus-5-5")
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 
+# Fixed list so the app can colour-code and total by category without
+# fuzzy matching free-text. Keep in sync with Category in the iOS app.
+CATEGORIES = [
+    "groceries", "dining", "transport", "shopping", "health",
+    "entertainment", "utilities", "other",
+]
+
+
 class ReceiptParseError(Exception):
     """The model answered, but not with a usable receipt."""
 
@@ -48,6 +56,7 @@ Rules:
 - `subtotal_cents`, `tax_cents`, `tip_cents`, `total_cents`: as printed. Sum multiple tax lines into `tax_cents`. Put service charges / gratuity in `tip_cents`. Use 0 for anything the receipt does not show -- never infer or compute these yourself.
 - `currency` is the ISO 4217 code implied by the symbol/locale ("USD", "INR", ...); use "USD" if you genuinely cannot tell.
 - `date` is YYYY-MM-DD, or an empty string if it is not legible.
+- `category` is the single best fit for the whole receipt, chosen from the allowed values (supermarket -> groceries, restaurant/cafe/bar -> dining, fuel/rideshare/transit -> transport, pharmacy/clinic -> health, bills -> utilities, anything unclear -> other).
 - Never invent items. If a line is partly unreadable, include what you can read and add a short note to `notes`. Use `notes` for anything the user should double-check.
 - If the image is not a receipt, set `is_receipt` to false and leave the other fields empty/zero."""
 
@@ -58,6 +67,7 @@ RECEIPT_SCHEMA = {
         "merchant": {"type": "string"},
         "date": {"type": "string"},
         "currency": {"type": "string"},
+        "category": {"type": "string", "enum": CATEGORIES},
         "items": {
             "type": "array",
             "items": {
@@ -78,7 +88,7 @@ RECEIPT_SCHEMA = {
         "notes": {"type": "array", "items": {"type": "string"}},
     },
     "required": [
-        "is_receipt", "merchant", "date", "currency", "items",
+        "is_receipt", "merchant", "date", "currency", "category", "items",
         "subtotal_cents", "tax_cents", "tip_cents", "total_cents", "notes",
     ],
     "additionalProperties": False,
@@ -96,6 +106,7 @@ class ParsedReceipt(BaseModel):
     merchant: str
     date: str
     currency: str
+    category: str
     items: list[ReceiptItem]
     subtotal_cents: int
     tax_cents: int

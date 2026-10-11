@@ -66,7 +66,7 @@ def main() -> int:
         return 1
 
     items_total, checks = backend.reconcile(receipt)
-    print(f"\n{receipt.merchant or '(unknown merchant)'}   {receipt.date or '(no date)'}   [{receipt.currency}]\n")
+    print(f"\n{receipt.merchant or '(unknown merchant)'}   {receipt.date or '(no date)'}   [{receipt.currency}]   category: {receipt.category}\n")
     width = max((len(i.name) for i in receipt.items), default=10)
     for item in receipt.items:
         qty = f"x{item.quantity}" if item.quantity != 1 else "  "
