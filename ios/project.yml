@@ -1,0 +1,76 @@
+name: Fin4U
+options:
+  bundleIdPrefix: com.dhana.fin4u
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+# BACKEND_BASE_URL / APP_KEY come from Secrets.xcconfig (gitignored; copy
+# Secrets.example.xcconfig). They surface to the app via Info.plist keys
+# below -- see Config.swift.
+configFiles:
+  Debug: Secrets.xcconfig
+  Release: Secrets.xcconfig
+
+schemes:
+  Fin4U:
+    build:
+      targets:
+        Fin4U: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - Fin4UTests
+    archive:
+      config: Release
+
+targets:
+  Fin4U:
+    type: application
+    platform: iOS
+    sources:
+      - path: Fin4U
+    info:
+      path: Fin4U/Info.plist
+      properties:
+        CFBundleDisplayName: "Fin4U"
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSCameraUsageDescription: "Fin4U uses the camera to scan your receipts."
+        # Only HTTPS to the Railway backend (standard OS-provided TLS), no
+        # custom cryptography -- same export-compliance answer as Amma.
+        ITSAppUsesNonExemptEncryption: false
+        BackendBaseURL: "$(BACKEND_BASE_URL)"
+        AppKey: "$(APP_KEY)"
+        # Lets Debug builds talk to the mock server on localhost over plain
+        # HTTP. TODO before App Store submission: remove -- Release should
+        # only ever use the HTTPS backend.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dhana.fin4u
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: H72SV43N57
+
+  Fin4UTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Fin4UTests
+    dependencies:
+      - target: Fin4U
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dhana.fin4u.tests
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: YES
