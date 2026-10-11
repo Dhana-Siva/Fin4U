@@ -453,6 +453,26 @@ final class OnePersonShareTests: XCTestCase {
         XCTAssertEqual(d.otherShare(of: d.items[1]), 10_000)  // kept its own
     }
 
+    func testAnItemSplitShowsExactAmountsThatAddUp() {
+        // $5.00 shared with Sam at 20% -> you $4.00, Sam $1.00.
+        let d = ExpenseDraft(items: [DraftItem(name: "Snacks", quantity: 1, cents: 500, category: .groceries)])
+        d.plan.isShared = true
+        d.plan.selectOnly(sam)
+        d.setOtherShare(2000, of: d.items[0].id)
+        let amounts = d.amounts(of: d.items[0])
+        XCTAssertEqual(amounts.you, 400)
+        XCTAssertEqual(amounts.other, 100)
+    }
+
+    func testOddAmountsStillAddUpToTheItem() {
+        let d = ExpenseDraft(items: [DraftItem(name: "Wrap", quantity: 1, cents: 333, category: .dining)])
+        d.plan.isShared = true
+        d.plan.selectOnly(sam)
+        let amounts = d.amounts(of: d.items[0])  // 50% of $3.33
+        XCTAssertEqual(amounts.you + amounts.other, 333)
+        XCTAssertEqual(Set([amounts.you, amounts.other]), [166, 167])
+    }
+
     func testSwitchingPeopleDropsTheOldOverrides() {
         let d = draft(sharedWith: sam)
         d.setOtherShare(8000, of: d.items[0].id)

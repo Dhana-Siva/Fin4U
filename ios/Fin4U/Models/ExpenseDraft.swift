@@ -165,6 +165,14 @@ final class ExpenseDraft {
         items[index].split = split == plan.defaultSplit ? nil : split
     }
 
+    /// What each side pays for one item, in cents: (you, the other person).
+    /// Always adds up to the item's amount exactly.
+    func amounts(of item: DraftItem) -> (you: Int, other: Int) {
+        let theirs = otherShare(of: item)
+        let parts = ExpenseMath.allocate(item.cents, weights: [ExpenseMath.whole - theirs, theirs])
+        return (parts[0], parts[1])
+    }
+
     var defaultOtherShare: Int { plan.otherShare(in: plan.defaultSplit) }
 
     /// Changes the share used by every item that doesn't have its own.

@@ -71,6 +71,9 @@ struct ReviewView: View {
                                 )
                             }
                         }
+                        if let other = draft.plan.other {
+                            splitBreakdown(for: item, otherName: other.name)
+                        }
                     }
                 }
                 .onDelete { draft.items.remove(atOffsets: $0) }
@@ -269,6 +272,18 @@ struct ReviewView: View {
             chip(category.wrappedValue.title, symbol: category.wrappedValue.symbol, tint: category.wrappedValue.color)
         }
         .buttonStyle(.borderless)
+    }
+
+    /// "You $4.00 + Daya $1.00 = $5.00" -- the percentages in actual money.
+    private func splitBreakdown(for item: DraftItem, otherName: String) -> some View {
+        let amounts = draft.amounts(of: item)
+        let money = { Money.format($0, currency: draft.currency) }
+        return Text("You \(money(amounts.you)) + \(otherName) \(money(amounts.other)) = \(money(item.cents))")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
     }
 
     /// "Sam  [ 50.00 ] %" -- who the item is shared with and their share.
