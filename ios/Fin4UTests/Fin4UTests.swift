@@ -561,3 +561,63 @@ final class ItemizeTests: XCTestCase {
         XCTAssertNil(old.itemize)
     }
 }
+
+final class SpendStatsTests: XCTestCase {
+    private var calendar: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC")!
+        return c
+    }()
+
+    private func date(_ y: Int, _ m: Int, _ d: Int, hour: Int = 12) -> Date {
+        calendar.date(from: DateComponents(year: y, month: m, day: d, hour: hour))!
+    }
+
+    private func spend(_ y: Int, _ m: Int, _ d: Int, _ cents: Int, _ category: ExpenseCategory = .groceries,
+                       currency: String = "USD", hour: Int = 12) -> Spend {
+        Spend(date: date(y, m, d, hour: hour), currency: currency, cents: cents, categories: [category: cents])
+    }
+
+    func testMonthlyTotalsGroupByMonthAndIgnoreOtherYears() {
+        let spends = [spend(2026, 10, 3, 1000), spend(2026, 10, 20, 500), spend(2026, 1, 5, 700), spend(2025, 10, 9, 9999)]
+        let months = SpendStats.monthlyTotals(spends, year: 2026, currency: "USD", calendar: calendar)
+        XCTAssertEqual(months, [10: 1500, 1: 700])
+    }
+
+    func testDailyTotalsMergeSameDayAcrossTimesAndSortNewestFirst() {
+        let spends = [
+            spend(2026, 10, 9, 1000, hour: 8), spend(2026, 10, 9, 250, hour: 21),
+            spend(2026, 10, 2, 400),
+        ]
+        let days = SpendStats.dailyTotals(spends, currency: "USD", calendar: calendar)
+        XCTAssertEqual(days.map(\.cents), [1250, 400])
+        XCTAssertEqual(days.map(\.count), [2, 1])
+        XCTAssertEqual(days.first?.day, calendar.startOfDay(for: date(2026, 10, 9)))
+    }
+
+    func testCurrenciesAreNeverAddedTogether() {
+        let spends = [spend(2026, 10, 1, 1000), spend(2026, 10, 2, 99_900, currency: "INR")]
+        XCTAssertEqual(SpendStats.primaryCurrency(spends), "INR")
+        XCTAssertEqual(SpendStats.total(spends, currency: "USD"), 1000)
+        XCTAssertEqual(SpendStats.otherCurrencies(spends, besides: "USD").map(\.currency), ["INR"])
+    }
+
+    func testCategoryTotalsAddUpAndSortBiggestFirst() {
+        let spends = [spend(2026, 10, 1, 1000, .dining), spend(2026, 10, 2, 3000, .groceries), spend(2026, 10, 3, 500, .dining)]
+        let totals = SpendStats.categoryTotals(spends, currency: "USD")
+        XCTAssertEqual(totals.map(\.category), [.groceries, .dining])
+        XCTAssertEqual(totals.map(\.cents), [3000, 1500])
+    }
+
+    func testYearsRunFromTheEarliestExpenseToNow() {
+        let spends = [spend(2024, 5, 1, 100), spend(2026, 1, 1, 100)]
+        XCTAssertEqual(SpendStats.years(spends, now: date(2026, 10, 11), calendar: calendar), 2024...2026)
+        XCTAssertEqual(SpendStats.years([], now: date(2026, 10, 11), calendar: calendar), 2026...2026)
+    }
+
+    func testEmptyInputsGiveEmptyResults() {
+        XCTAssertEqual(SpendStats.primaryCurrency([]), "USD")
+        XCTAssertEqual(SpendStats.total([], currency: "USD"), 0)
+        XCTAssertTrue(SpendStats.dailyTotals([], currency: "USD", calendar: calendar).isEmpty)
+    }
+}

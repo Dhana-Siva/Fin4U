@@ -15,9 +15,25 @@ struct HomeView: View {
 
     @State private var scanning = false
     @State private var editingDraft: ExpenseDraft?
+    @State private var shownYear = Calendar.current.component(.year, from: Date())
 
-    private var thisMonth: [Expense] {
-        expenses.filter { Calendar.current.isDate($0.date, equalTo: Date(), toGranularity: .month) }
+    private let calendar = Calendar.current
+
+    private var spends: [Spend] { expenses.map(\.spend) }
+    private var currency: String { SpendStats.primaryCurrency(spends) }
+    private var currentYear: Int { calendar.component(.year, from: Date()) }
+    private var availableYears: ClosedRange<Int> { SpendStats.years(spends) }
+
+    private func spends(inYear year: Int) -> [Spend] {
+        spends.filter { calendar.component(.year, from: $0.date) == year }
+    }
+
+    private var thisMonth: [Spend] {
+        spends.filter { calendar.isDate($0.date, equalTo: Date(), toGranularity: .month) }
+    }
+
+    private var firstOfThisMonth: Date {
+        calendar.dateInterval(of: .month, for: Date())?.start ?? Date()
     }
 
     var body: some View {
@@ -28,23 +44,19 @@ struct HomeView: View {
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                 } else {
-                    Section {
-                        MonthSummaryCard(expenses: thisMonth, fallbackCurrency: expenses.first?.currency ?? "USD")
-                    }
-                    Section("Recent") {
-                        ForEach(expenses) { expense in
-                            Button {
-                                editingDraft = ExpenseDraft(expense: expense)
-                            } label: {
-                                ExpenseRow(expense: expense)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .onDelete(perform: delete)
-                    }
+                    yearSection
+                    monthToDateSection
+                    byMonthSection
+                    recentSection
                 }
             }
             .navigationTitle("Fin4U")
+            .navigationDestination(for: DashboardRoute.self) { route in
+                switch route {
+                case .month(let month): MonthView(month: month, currency: currency)
+                case .day(let day): DayView(day: day, currency: currency)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button { scanning = true } label: {
@@ -55,11 +67,89 @@ struct HomeView: View {
             .fullScreenCover(isPresented: $scanning) {
                 ScanFlowView()
             }
-            .sheet(item: $editingDraft) { draft in
-                NavigationStack {
-                    ReviewView(draft: draft, onClose: { editingDraft = nil })
+            .expenseEditor($editingDraft)
+            .task {
+                #if DEBUG
+                if DemoData.requested { DemoData.seed(into: context) }
+                #endif
+            }
+        }
+    }
+
+    // MARK: Sections
+
+    private var yearSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Button { shownYear -= 1 } label: { Image(systemName: "chevron.left") }
+                        .disabled(shownYear <= availableYears.lowerBound)
+                    Spacer()
+                    Text(verbatim: String(shownYear)).font(.headline)
+                    Spacer()
+                    Button { shownYear += 1 } label: { Image(systemName: "chevron.right") }
+                        .disabled(shownYear >= currentYear)
+                }
+                .buttonStyle(.borderless)
+
+                PeriodCard(
+                    title: shownYear == currentYear ? "Year to date" : "Total for \(String(shownYear))",
+                    spends: spends(inYear: shownYear),
+                    currency: currency
+                )
+            }
+        }
+    }
+
+    private var monthToDateSection: some View {
+        Section {
+            NavigationLink(value: DashboardRoute.month(firstOfThisMonth)) {
+                PeriodCard(
+                    title: "Month to date -- \(Date().formatted(.dateTime.month(.wide)))",
+                    spends: thisMonth,
+                    currency: currency,
+                    showCategories: false
+                )
+            }
+        }
+    }
+
+    private var byMonthSection: some View {
+        let totals = SpendStats.monthlyTotals(spends, year: shownYear, currency: currency)
+        let lastMonth = shownYear == currentYear ? calendar.component(.month, from: Date()) : 12
+        let months = (1...lastMonth).reversed().filter { totals[$0] != nil }
+        let largest = totals.values.max() ?? 1
+
+        return Section("By month") {
+            if months.isEmpty {
+                Text("Nothing spent in \(String(shownYear)).").foregroundStyle(.secondary)
+            }
+            ForEach(months, id: \.self) { month in
+                let first = calendar.date(from: DateComponents(year: shownYear, month: month, day: 1)) ?? Date()
+                NavigationLink(value: DashboardRoute.month(first)) {
+                    BarRow(
+                        title: first.formatted(.dateTime.month(.wide)),
+                        subtitle: nil,
+                        cents: totals[month] ?? 0,
+                        largest: largest,
+                        currency: currency
+                    )
                 }
             }
+        }
+    }
+
+    private var recentSection: some View {
+        Section("Recent") {
+            ForEach(expenses.prefix(5)) { expense in
+                Button {
+                    editingDraft = ExpenseDraft(expense: expense)
+                } label: {
+                    ExpenseRow(expense: expense)
+                }
+                .buttonStyle(.plain)
+            }
+            .onDelete(perform: delete)
         }
     }
 
@@ -75,7 +165,8 @@ struct HomeView: View {
     }
 
     private func delete(at offsets: IndexSet) {
-        for index in offsets { context.delete(expenses[index]) }
+        let shown = Array(expenses.prefix(5))
+        for index in offsets { context.delete(shown[index]) }
         try? context.save()
     }
 }
@@ -122,76 +213,5 @@ struct ExpenseRow: View {
         var text = count > 0 ? "\(date) · \(count) item\(count == 1 ? "" : "s")" : date
         if expense.isShared { text += " · Shared" }
         return text
-    }
-}
-
-/// This month's total plus a per-category breakdown. Totals are per
-/// currency (adding dollars to rupees would be nonsense); the breakdown
-/// covers the main one.
-struct MonthSummaryCard: View {
-    let expenses: [Expense]
-    let fallbackCurrency: String
-
-    // Everything here is the owner's own share, so a receipt split with a
-    // roommate only counts the part they actually paid for.
-    private var totalsByCurrency: [(currency: String, total: Int)] {
-        Dictionary(grouping: expenses, by: \.currency)
-            .map { (currency: $0.key, total: $0.value.reduce(0) { $0 + $1.myTotalCents }) }
-            .sorted { $0.total > $1.total }
-    }
-
-    private var primaryCurrency: String { totalsByCurrency.first?.currency ?? fallbackCurrency }
-
-    /// By item category, so a supermarket trip that included vitamins counts
-    /// partly under Groceries and partly under Health.
-    private var categoryTotals: [(category: ExpenseCategory, total: Int)] {
-        var totals: [ExpenseCategory: Int] = [:]
-        for expense in expenses where expense.currency == primaryCurrency {
-            for (category, cents) in expense.myCategoryTotals { totals[category, default: 0] += cents }
-        }
-        return totals
-            .map { (category: $0.key, total: $0.value) }
-            .sorted { $0.total > $1.total }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(Date().formatted(.dateTime.month(.wide).year()))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            if expenses.isEmpty {
-                Text("Nothing spent yet this month.")
-                    .font(.headline)
-            } else {
-                Text(Money.format(totalsByCurrency.first?.total ?? 0, currency: primaryCurrency))
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-
-                ForEach(totalsByCurrency.dropFirst(), id: \.currency) { entry in
-                    Text("+ \(Money.format(entry.total, currency: entry.currency))")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-
-                let largest = max(categoryTotals.map(\.total).max() ?? 1, 1)
-                ForEach(categoryTotals, id: \.category) { entry in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Label(entry.category.title, systemImage: entry.category.symbol)
-                                .font(.footnote)
-                                .foregroundStyle(entry.category.color)
-                            Spacer()
-                            Text(Money.format(entry.total, currency: primaryCurrency))
-                                .font(.footnote)
-                                .monospacedDigit()
-                        }
-                        ProgressView(value: Double(max(entry.total, 0)), total: Double(largest))
-                            .tint(entry.category.color)
-                    }
-                }
-            }
-        }
-        .padding(.vertical, 4)
     }
 }
