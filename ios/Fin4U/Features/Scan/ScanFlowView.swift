@@ -137,7 +137,7 @@ struct ScanFlowView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(.orange)
-            Text("Couldn't read that receipt")
+            Text("That didn't work")
                 .font(.title3.bold())
             Text(message)
                 .font(.subheadline)
