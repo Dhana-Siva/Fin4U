@@ -804,3 +804,26 @@ final class ProfileTests: XCTestCase {
         XCTAssertEqual(Greeting.title(firstName: "", hour: 9), "Fin4U")
     }
 }
+
+final class MonthSeriesTests: XCTestCase {
+    private var calendar: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.locale = Locale(identifier: "en_US")
+        return c
+    }()
+
+    func testAlwaysTwelveMonthsInOrderWithBlanksAsZero() {
+        let series = SpendStats.monthSeries([10: 6747, 2: 4550], calendar: calendar)
+        XCTAssertEqual(series.count, 12)
+        XCTAssertEqual(series.map(\.month), Array(1...12))
+        XCTAssertEqual(series.first?.label, "Jan")
+        XCTAssertEqual(series.last?.label, "Dec")
+        XCTAssertEqual(series[1].cents, 4550)
+        XCTAssertEqual(series[9].cents, 6747)
+        XCTAssertEqual(series.filter { $0.cents == 0 }.count, 10)
+    }
+
+    func testAnEmptyYearIsTwelveZeros() {
+        XCTAssertEqual(SpendStats.monthSeries([:], calendar: calendar).map(\.cents), Array(repeating: 0, count: 12))
+    }
+}

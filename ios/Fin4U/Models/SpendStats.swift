@@ -17,6 +17,15 @@ extension Expense {
     }
 }
 
+/// One bar of the by-month chart.
+struct MonthPoint: Equatable, Identifiable {
+    var month: Int   // 1...12
+    var label: String
+    var cents: Int
+
+    var id: Int { month }
+}
+
 struct DayTotal: Equatable, Identifiable {
     var day: Date  // start of day
     var cents: Int
@@ -77,6 +86,13 @@ enum SpendStats {
             if parts.year == year, let month = parts.month { result[month, default: 0] += spend.cents }
         }
         return result
+    }
+
+    /// All twelve months of a year in order, empty ones as zero, so the chart
+    /// keeps its shape even when most of the year is blank.
+    static func monthSeries(_ totals: [Int: Int], calendar: Calendar = .current) -> [MonthPoint] {
+        let names = calendar.shortMonthSymbols
+        return (1...12).map { MonthPoint(month: $0, label: names[$0 - 1], cents: totals[$0] ?? 0) }
     }
 
     /// Days that have spending, newest first.

@@ -18,6 +18,7 @@ struct HomeView: View {
     @State private var scanning = false
     @State private var editingDraft: ExpenseDraft?
     @State private var shownYear = Calendar.current.component(.year, from: Date())
+    @State private var path: [DashboardRoute] = []
 
     private let calendar = Calendar.current
 
@@ -39,7 +40,7 @@ struct HomeView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 if expenses.isEmpty {
                     emptyState
@@ -47,6 +48,7 @@ struct HomeView: View {
                         .listRowSeparator(.hidden)
                 } else {
                     yearSection
+                    chartSection
                     monthToDateSection
                     owedSection
                     byMonthSection
@@ -114,6 +116,34 @@ struct HomeView: View {
                     currency: currency
                 )
             }
+        } header: {
+            Text("Your expenses summary")
+                .font(.title2.bold())
+                .foregroundColor(.primary)
+                .textCase(nil)
+        }
+    }
+
+    private var chartSection: some View {
+        let totals = SpendStats.monthlyTotals(spends, year: shownYear, currency: currency)
+        return Section {
+            if totals.isEmpty {
+                Text("Nothing spent in \(String(shownYear)).").foregroundStyle(.secondary)
+            } else {
+                MonthlyChart(
+                    series: SpendStats.monthSeries(totals),
+                    currency: currency,
+                    highlightedMonth: shownYear == currentYear ? calendar.component(.month, from: Date()) : nil
+                ) { month in
+                    if let first = calendar.date(from: DateComponents(year: shownYear, month: month, day: 1)) {
+                        path.append(.month(first))
+                    }
+                }
+            }
+        } header: {
+            Text("Spend by month, \(String(shownYear))")
+        } footer: {
+            if !totals.isEmpty { Text("Tap a bar to open that month.") }
         }
     }
 
