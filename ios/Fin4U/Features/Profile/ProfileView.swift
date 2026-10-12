@@ -80,6 +80,12 @@ struct ProfileView: View {
                 }
 
                 if Config.splitwiseEnabled { splitwiseSection }
+
+                Section {
+                    NavigationLink("Household (test)") { HouseholdTestView() }
+                } footer: {
+                    Text("A test of sharing with family. Safe to ignore.")
+                }
             }
             .navigationTitle("Profile")
             .task(id: splitwise.isConnected) { await loadGroups() }

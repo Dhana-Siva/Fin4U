@@ -24,6 +24,7 @@
 		737EC3E51E2F11B0EF52972A /* DayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26A95A19B53D8D4F344FC466 /* DayView.swift */; };
 		74320BB82A583018E2CB2138 /* Reconciliation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115D8796BEAC28563252884A /* Reconciliation.swift */; };
 		78430DCEB17477A63666554E /* Fin4UApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E85C7259B1E1B2A65FFB934 /* Fin4UApp.swift */; };
+		826FE706143A8B51D56256D1 /* ShareAcceptance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C99D86A19601BED77508FBD /* ShareAcceptance.swift */; };
 		857EE977008329B1D67FBDDA /* Person.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89814D7083EE7A8DF906C375 /* Person.swift */; };
 		898B690FE3C8360C59DB120B /* DashboardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE369F648A17B2B56F56F939 /* DashboardComponents.swift */; };
 		90A5272F7CBAA38839D45443 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057DC4C281102CC5F863C542 /* ProfileView.swift */; };
@@ -33,6 +34,7 @@
 		970371B8615F94EC17C2A5A3 /* ReceiptAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10BEFD57D544C442B76F4E3 /* ReceiptAPI.swift */; };
 		9A369CB5D09EF26AF48207AF /* SplitwiseAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CBF9C4938ECEBF0D9B1098 /* SplitwiseAPI.swift */; };
 		9EC72537E0B8679AD13E3AA1 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156370F06E719A82FE10B7E5 /* ReviewView.swift */; };
+		9FA30D3B468F1AE63EF88C16 /* HouseholdTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 946A9E016CA5470C1262D5FB /* HouseholdTestView.swift */; };
 		A76E0433E8E5936F077E834D /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 729D227C756E94EC36508A62 /* HomeView.swift */; };
 		A7E6BD753BA24073897F37D7 /* DisclosureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7055BD228928ADB675E5AE23 /* DisclosureView.swift */; };
 		ABA6CB4A5892745CAF09C217 /* Split.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AFCA25D93426682FFB85DB6 /* Split.swift */; };
@@ -46,6 +48,7 @@
 		DA30E52BF20AB96E059F9DF7 /* Expense.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93E2816A46FFF6A21B95E44 /* Expense.swift */; };
 		E378587F4814486B4BDA338F /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D32EAC5138C9EC39FB66B3 /* DocumentScannerView.swift */; };
 		E69E2ED767C641090C35A9D4 /* Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F257BDCB759A75AFCFFCB693 /* Profile.swift */; };
+		F2B90473C73D3DD6C435198C /* HouseholdCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4BED225B49FABB7DA955B9 /* HouseholdCloud.swift */; };
 		FFC1F569E363A4B4C7CABD2C /* OwedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A94A24F04E14839F8EE290 /* OwedView.swift */; };
 /* End PBXBuildFile section */
 
@@ -70,12 +73,15 @@
 		1825A8EC34FA7999EBAA61D6 /* ParsedReceipt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsedReceipt.swift; sourceTree = "<group>"; };
 		26A95A19B53D8D4F344FC466 /* DayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayView.swift; sourceTree = "<group>"; };
 		2A62C392F0E64975316F9EDD /* Fin4UTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fin4UTests.swift; sourceTree = "<group>"; };
+		2DD4234460EEED2A4CE0F7D2 /* Fin4U.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Fin4U.entitlements; sourceTree = "<group>"; };
 		3563A80F7AB8CCD32808D93F /* MonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthView.swift; sourceTree = "<group>"; };
 		37A87EF4E7CD828AC98FD4E4 /* DashboardLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardLayout.swift; sourceTree = "<group>"; };
 		3BE447D02068977EF8FD8320 /* ScanFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanFlowView.swift; sourceTree = "<group>"; };
+		4C99D86A19601BED77508FBD /* ShareAcceptance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareAcceptance.swift; sourceTree = "<group>"; };
 		4F7EF66DC691920D2BF7EBE2 /* SplitwiseSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitwiseSession.swift; sourceTree = "<group>"; };
 		52CBF9C4938ECEBF0D9B1098 /* SplitwiseAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitwiseAPI.swift; sourceTree = "<group>"; };
 		5AFCA25D93426682FFB85DB6 /* Split.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Split.swift; sourceTree = "<group>"; };
+		5B4BED225B49FABB7DA955B9 /* HouseholdCloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdCloud.swift; sourceTree = "<group>"; };
 		6868B7878A1FB8E79E68EAE7 /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		6FBD6393FCA56E5A0A469982 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7055BD228928ADB675E5AE23 /* DisclosureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisclosureView.swift; sourceTree = "<group>"; };
@@ -85,6 +91,7 @@
 		7FCF35ACA0B27A295A750E50 /* ImagePrep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePrep.swift; sourceTree = "<group>"; };
 		89814D7083EE7A8DF906C375 /* Person.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Person.swift; sourceTree = "<group>"; };
 		92D32EAC5138C9EC39FB66B3 /* DocumentScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerView.swift; sourceTree = "<group>"; };
+		946A9E016CA5470C1262D5FB /* HouseholdTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdTestView.swift; sourceTree = "<group>"; };
 		952B584C4763233B785A8172 /* ShareSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSummary.swift; sourceTree = "<group>"; };
 		9E85C7259B1E1B2A65FFB934 /* Fin4UApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fin4UApp.swift; sourceTree = "<group>"; };
 		A06EFD798F456185AD51D5FF /* SpendStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendStats.swift; sourceTree = "<group>"; };
@@ -103,7 +110,7 @@
 		F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_71806FA3-0797-4467-9EED-7C2627CD815A" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_166C53EB-A527-429B-9D57-B58E884CEDBF" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -112,6 +119,7 @@
 			children = (
 				7940272E3D7237720127A350 /* Assets.xcassets */,
 				B4E8966D05765DBDF0EB65A5 /* Config.swift */,
+				2DD4234460EEED2A4CE0F7D2 /* Fin4U.entitlements */,
 				6FBD6393FCA56E5A0A469982 /* Info.plist */,
 				F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */,
 				88E555D4B3C6E3A84830AF9F /* App */,
@@ -147,6 +155,14 @@
 				057DC4C281102CC5F863C542 /* ProfileView.swift */,
 			);
 			path = Profile;
+			sourceTree = "<group>";
+		};
+		3B04D0454093AE3F4FF2BFCA /* Household */ = {
+			isa = PBXGroup;
+			children = (
+				5B4BED225B49FABB7DA955B9 /* HouseholdCloud.swift */,
+			);
+			path = Household;
 			sourceTree = "<group>";
 		};
 		3DC059EA489201A7C50EA4BA /* Products */ = {
@@ -223,11 +239,20 @@
 			path = Support;
 			sourceTree = "<group>";
 		};
+		7BFB219F61A29096BB60272B /* Household */ = {
+			isa = PBXGroup;
+			children = (
+				946A9E016CA5470C1262D5FB /* HouseholdTestView.swift */,
+			);
+			path = Household;
+			sourceTree = "<group>";
+		};
 		88E555D4B3C6E3A84830AF9F /* App */ = {
 			isa = PBXGroup;
 			children = (
 				74D30E6F2C70DA312A14D6FF /* DemoData.swift */,
 				9E85C7259B1E1B2A65FFB934 /* Fin4UApp.swift */,
+				4C99D86A19601BED77508FBD /* ShareAcceptance.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -238,6 +263,7 @@
 				5FF004669C8D8E70E7EC2BB5 /* Dashboard */,
 				594FE62C213D407A47AF5D72 /* Disclosure */,
 				52FCE16C4A028F9537DD5E6C /* Home */,
+				7BFB219F61A29096BB60272B /* Household */,
 				3911C3EE62AFFAAD444970E4 /* Profile */,
 				AD5A293FB5A3371B44E07F49 /* Review */,
 				1C419D3DD32A74CD70A2941D /* Scan */,
@@ -259,6 +285,7 @@
 			isa = PBXGroup;
 			children = (
 				F10BEFD57D544C442B76F4E3 /* ReceiptAPI.swift */,
+				3B04D0454093AE3F4FF2BFCA /* Household */,
 				CC86B6FDAA7F3723B40C7662 /* Splitwise */,
 			);
 			path = Services;
@@ -284,10 +311,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_0D2C6BC4-31DF-4D1F-B2DF-4971829734C9" /* ios */ = {
+		"TEMP_3CA7A1F3-5F0A-406C-8F52-471050CAE51A" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_71806FA3-0797-4467-9EED-7C2627CD815A" /* Secrets.xcconfig */,
+				"TEMP_166C53EB-A527-429B-9D57-B58E884CEDBF" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -405,6 +432,8 @@
 				78430DCEB17477A63666554E /* Fin4UApp.swift in Sources */,
 				1809EEB39EF9F2CBB69CF2BE /* FriendPickerView.swift in Sources */,
 				A76E0433E8E5936F077E834D /* HomeView.swift in Sources */,
+				F2B90473C73D3DD6C435198C /* HouseholdCloud.swift in Sources */,
+				9FA30D3B468F1AE63EF88C16 /* HouseholdTestView.swift in Sources */,
 				AE0E76EFD1C67D34DDA68FFA /* ImagePrep.swift in Sources */,
 				4B0E5AFDA19FED15A69F86EF /* Keychain.swift in Sources */,
 				D58F97AB4D56923A21203680 /* Money.swift in Sources */,
@@ -419,6 +448,7 @@
 				74320BB82A583018E2CB2138 /* Reconciliation.swift in Sources */,
 				9EC72537E0B8679AD13E3AA1 /* ReviewView.swift in Sources */,
 				CE248BC55EB3F3E1A46AFBC4 /* ScanFlowView.swift in Sources */,
+				826FE706143A8B51D56256D1 /* ShareAcceptance.swift in Sources */,
 				B61E006E90EB7EDA35E29544 /* ShareSummary.swift in Sources */,
 				69ABCD4B91035B3230E623C4 /* SpendStats.swift in Sources */,
 				ABA6CB4A5892745CAF09C217 /* Split.swift in Sources */,
@@ -447,6 +477,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Fin4U/Fin4U.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -484,7 +515,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_71806FA3-0797-4467-9EED-7C2627CD815A" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_166C53EB-A527-429B-9D57-B58E884CEDBF" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -548,7 +579,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_71806FA3-0797-4467-9EED-7C2627CD815A" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_166C53EB-A527-429B-9D57-B58E884CEDBF" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -626,6 +657,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Fin4U/Fin4U.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

@@ -1,3 +1,4 @@
+import CloudKit
 import SwiftUI
 import SwiftData
 
@@ -10,6 +11,8 @@ struct Fin4UApp: App {
     @AppStorage("receiptDisclosureAcknowledged") private var acknowledged = false
     @State private var profile = Profile()
     @State private var splitwise = SplitwiseSession()
+    @State private var household = HouseholdCloud()
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
         WindowGroup {
@@ -22,6 +25,12 @@ struct Fin4UApp: App {
             }
             .environment(profile)
             .environment(splitwise)
+            .environment(household)
+            .onReceive(NotificationCenter.default.publisher(for: .householdInvitationOpened)) { note in
+                if let metadata = note.object as? CKShare.Metadata {
+                    Task { await household.accept(metadata) }
+                }
+            }
             .task { if Config.splitwiseEnabled { await splitwise.refresh() } }
         }
         .modelContainer(for: [Expense.self, ExpenseItem.self, Person.self])

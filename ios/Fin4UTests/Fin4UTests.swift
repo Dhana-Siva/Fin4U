@@ -1379,3 +1379,35 @@ final class ShareSummaryTests: XCTestCase {
         XCTAssertFalse(text.contains("owes"))
     }
 }
+
+import CloudKit
+
+final class HouseholdNoteTests: XCTestCase {
+    private func record(text: String? = "milk", author: String? = "Daya", date: Date? = Date(timeIntervalSince1970: 1_000), type: String = HouseholdCloud.noteType) -> CKRecord {
+        let zone = CKRecordZone.ID(zoneName: "Household", ownerName: CKCurrentUserDefaultName)
+        let r = CKRecord(recordType: type, recordID: CKRecord.ID(recordName: "n1", zoneID: zone))
+        if let text { r["text"] = text as CKRecordValue }
+        if let author { r["author"] = author as CKRecordValue }
+        if let date { r["createdAt"] = date as CKRecordValue }
+        return r
+    }
+
+    func testANoteRecordBecomesADisplayNote() {
+        let note = HouseholdNote(record: record(), fromSharedWithMe: true)
+        XCTAssertEqual(note?.text, "milk")
+        XCTAssertEqual(note?.author, "Daya")
+        XCTAssertEqual(note?.id, "n1")
+        XCTAssertEqual(note?.fromSharedWithMe, true)
+    }
+
+    func testAMissingOrEmptyAuthorReadsAsSomeone() {
+        XCTAssertEqual(HouseholdNote(record: record(author: nil), fromSharedWithMe: false)?.author, "Someone")
+        XCTAssertEqual(HouseholdNote(record: record(author: ""), fromSharedWithMe: false)?.author, "Someone")
+    }
+
+    func testIncompleteOrOtherRecordsAreSkippedNotFatal() {
+        XCTAssertNil(HouseholdNote(record: record(text: nil), fromSharedWithMe: false))
+        XCTAssertNil(HouseholdNote(record: record(date: nil), fromSharedWithMe: false))
+        XCTAssertNil(HouseholdNote(record: record(type: HouseholdCloud.rootType), fromSharedWithMe: false))
+    }
+}

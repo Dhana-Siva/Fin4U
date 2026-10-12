@@ -32,9 +32,20 @@ targets:
     platform: iOS
     sources:
       - path: Fin4U
+    entitlements:
+      path: Fin4U/Fin4U.entitlements
+      properties:
+        # Household sharing: a CloudKit container the two household members
+        # share through Apple's own invite. Nothing goes to Fin4U's server.
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.dhana.fin4u
+        com.apple.developer.icloud-services:
+          - CloudKit
     info:
       path: Fin4U/Info.plist
       properties:
+        # Lets this app open iCloud share invitations.
+        CKSharingSupported: true
         CFBundleDisplayName: "Fin4U"
         UILaunchScreen: {}
         UIApplicationSceneManifest:
