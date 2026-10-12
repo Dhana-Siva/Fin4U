@@ -29,6 +29,7 @@
 		A7E6BD753BA24073897F37D7 /* DisclosureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7055BD228928ADB675E5AE23 /* DisclosureView.swift */; };
 		ABA6CB4A5892745CAF09C217 /* Split.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AFCA25D93426682FFB85DB6 /* Split.swift */; };
 		AE0E76EFD1C67D34DDA68FFA /* ImagePrep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCF35ACA0B27A295A750E50 /* ImagePrep.swift */; };
+		C9F52E139ABDD76A8FCC4A0E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */; };
 		CD94226D28FC7791B229F95F /* ExpenseDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B22E27C540F4805644321EF /* ExpenseDraft.swift */; };
 		CE248BC55EB3F3E1A46AFBC4 /* ScanFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE447D02068977EF8FD8320 /* ScanFlowView.swift */; };
 		D58F97AB4D56923A21203680 /* Money.swift in Sources */ = {isa = PBXBuildFile; fileRef = F874F03D569B7AB187302A1D /* Money.swift */; };
@@ -81,9 +82,10 @@
 		E5728FE4436C7348F8040789 /* CentsField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CentsField.swift; sourceTree = "<group>"; };
 		F10BEFD57D544C442B76F4E3 /* ReceiptAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptAPI.swift; sourceTree = "<group>"; };
 		F257BDCB759A75AFCFFCB693 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
+		F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_F35BD56F-4025-483E-B203-E8856D4249BA" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_298CAADC-80DE-48FB-B62F-E25710B7D235" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -93,6 +95,7 @@
 				7940272E3D7237720127A350 /* Assets.xcassets */,
 				B4E8966D05765DBDF0EB65A5 /* Config.swift */,
 				6FBD6393FCA56E5A0A469982 /* Info.plist */,
+				F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */,
 				88E555D4B3C6E3A84830AF9F /* App */,
 				8915802165A094A0F3D1952A /* Features */,
 				66F223D9F627F68A13FF41A4 /* Models */,
@@ -238,10 +241,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_AA11AD04-83EF-4988-AE7E-5DB471D9DBDC" /* ios */ = {
+		"TEMP_177B5D7A-A769-4D49-9D0D-9C22B2A3BE40" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_F35BD56F-4025-483E-B203-E8856D4249BA" /* Secrets.xcconfig */,
+				"TEMP_298CAADC-80DE-48FB-B62F-E25710B7D235" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -326,6 +329,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F9728010D49D6D7AAEE7103 /* Assets.xcassets in Resources */,
+				C9F52E139ABDD76A8FCC4A0E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -428,7 +432,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_F35BD56F-4025-483E-B203-E8856D4249BA" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_298CAADC-80DE-48FB-B62F-E25710B7D235" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -492,7 +496,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_F35BD56F-4025-483E-B203-E8856D4249BA" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_298CAADC-80DE-48FB-B62F-E25710B7D235" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
