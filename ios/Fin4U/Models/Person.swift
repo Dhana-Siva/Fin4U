@@ -8,6 +8,8 @@ final class Person {
     var id: UUID
     var name: String
     var createdAt: Date
+    /// Which of the owner's Splitwise friends this person is, once linked.
+    var splitwiseUserID: Int?
 
     init(name: String) {
         self.id = UUID()

@@ -857,3 +857,237 @@ final class CollapsedSectionsTests: XCTestCase {
         XCTAssertEqual(collapsed.sections, [.chart, .recent])
     }
 }
+
+final class SplitwisePayloadTests: XCTestCase {
+    private var utc: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC")!
+        return c
+    }()
+
+    func testSharesBecomeNumberedUserFieldsThatAddUpToTheCost() throws {
+        let fields = try SplitwisePayload.fields(
+            description: "Thai Garden", date: Date(timeIntervalSince1970: 1_790_000_000), currency: "USD",
+            totalCents: 5500, groupID: 0,
+            shares: [
+                SplitwiseShare(userID: 11, paidCents: 5500, owedCents: 2750),
+                SplitwiseShare(userID: 22, paidCents: 0, owedCents: 2750),
+            ],
+            details: "notes", calendar: utc
+        )
+        XCTAssertEqual(fields["cost"], "55.00")
+        XCTAssertEqual(fields["description"], "Thai Garden")
+        XCTAssertEqual(fields["currency_code"], "USD")
+        XCTAssertEqual(fields["group_id"], "0")
+        XCTAssertEqual(fields["users__0__user_id"], "11")
+        XCTAssertEqual(fields["users__0__paid_share"], "55.00")
+        XCTAssertEqual(fields["users__0__owed_share"], "27.50")
+        XCTAssertEqual(fields["users__1__user_id"], "22")
+        XCTAssertEqual(fields["users__1__paid_share"], "0.00")
+        XCTAssertEqual(fields["users__1__owed_share"], "27.50")
+    }
+
+    func testOddCentsStayExact() throws {
+        let fields = try SplitwisePayload.fields(
+            description: "x", date: Date(), currency: "USD", totalCents: 189, groupID: 7,
+            shares: [SplitwiseShare(userID: 1, paidCents: 189, owedCents: 95), SplitwiseShare(userID: 2, paidCents: 0, owedCents: 94)],
+            details: ""
+        )
+        XCTAssertEqual(fields["users__0__owed_share"], "0.95")
+        XCTAssertEqual(fields["users__1__owed_share"], "0.94")
+        XCTAssertEqual(fields["group_id"], "7")
+    }
+
+    func testRefusesToSendAmountsThatDontAddUp() {
+        XCTAssertThrowsError(try SplitwisePayload.fields(
+            description: "x", date: Date(), currency: "USD", totalCents: 1000, groupID: 0,
+            shares: [SplitwiseShare(userID: 1, paidCents: 1000, owedCents: 400), SplitwiseShare(userID: 2, paidCents: 0, owedCents: 500)],
+            details: ""
+        )) { XCTAssertEqual($0 as? SplitwisePayloadError, .sharesDontAddUp) }
+        XCTAssertThrowsError(try SplitwisePayload.fields(
+            description: "x", date: Date(), currency: "USD", totalCents: 1000, groupID: 0,
+            shares: [SplitwiseShare(userID: 1, paidCents: 0, owedCents: 500), SplitwiseShare(userID: 2, paidCents: 0, owedCents: 500)],
+            details: ""
+        )) { XCTAssertEqual($0 as? SplitwisePayloadError, .nobodyPaid) }
+    }
+
+    func testTheDateIsNoonUTCOnTheReceiptsOwnDay() {
+        var la = Calendar(identifier: .gregorian)
+        la.timeZone = TimeZone(identifier: "America/Los_Angeles")!
+        let lateEvening = la.date(from: DateComponents(year: 2026, month: 10, day: 9, hour: 23, minute: 30))!
+        XCTAssertEqual(SplitwisePayload.isoDate(lateEvening, calendar: la), "2026-10-09T12:00:00Z")
+        let earlyMorning = la.date(from: DateComponents(year: 2026, month: 1, day: 1, hour: 0, minute: 5))!
+        XCTAssertEqual(SplitwisePayload.isoDate(earlyMorning, calendar: la), "2026-01-01T12:00:00Z")
+    }
+
+    func testTheNoteListsItemsAndWhoPaysForEach() {
+        let text = SplitwisePayload.details(
+            merchant: "Shoprite",
+            items: [
+                (name: "Milk", cents: 429, shares: [(name: "Dhana", cents: 215), (name: "Sam", cents: 214)]),
+                (name: "Vitamins", cents: 1299, shares: [(name: "Dhana", cents: 1299), (name: "Sam", cents: 0)]),
+            ],
+            taxCents: 120, tipCents: 0, currency: "USD"
+        )
+        XCTAssertTrue(text.contains("Receipt from Shoprite"))
+        XCTAssertTrue(text.contains("Milk $4.29  ->  Dhana $2.15 / Sam $2.14"))
+        XCTAssertTrue(text.contains("Vitamins $12.99  ->  Dhana $12.99"))  // Sam's zero share is left out
+        XCTAssertFalse(text.contains("Sam $0.00"))
+        XCTAssertTrue(text.contains("Tax $1.20"))
+        XCTAssertFalse(text.contains("Tip"))
+    }
+
+    func testDecodesSplitwiseResponses() throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let user = try decoder.decode(SplitwiseCurrentUserResponse.self, from: Data(#"{"user":{"id":5,"first_name":"Daya","last_name":null,"email":"d@example.com","registration_status":"confirmed"}}"#.utf8))
+        XCTAssertEqual(user.user.displayName, "Daya")
+        let friends = try decoder.decode(SplitwiseFriendsResponse.self, from: Data(#"{"friends":[{"id":9,"first_name":"Sam","last_name":"Lee","email":null}]}"#.utf8))
+        XCTAssertEqual(friends.friends.first?.displayName, "Sam Lee")
+        let ok = try decoder.decode(SplitwiseCreateExpenseResponse.self, from: Data(#"{"expenses":[{"id":123456}],"errors":{}}"#.utf8))
+        XCTAssertEqual(ok.expenses?.first?.id, 123456)
+        XCTAssertEqual(ok.errors?.messages, [])
+        let bad = try decoder.decode(SplitwiseCreateExpenseResponse.self, from: Data(#"{"expenses":[],"errors":{"base":["Total must equal the sum of shares"]}}"#.utf8))
+        XCTAssertEqual(bad.errors?.messages, ["Total must equal the sum of shares"])
+    }
+}
+
+/// Answers every request from a closure, so API code runs without a network.
+final class StubURLProtocol: URLProtocol {
+    nonisolated(unsafe) static var handler: ((URLRequest) -> (Int, Data))?
+    nonisolated(unsafe) static var lastRequest: URLRequest?
+    nonisolated(unsafe) static var lastBody: Data?
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        Self.lastRequest = request
+        if let stream = request.httpBodyStream {
+            stream.open()
+            var data = Data()
+            var buffer = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable {
+                let count = stream.read(&buffer, maxLength: buffer.count)
+                if count <= 0 { break }
+                data.append(buffer, count: count)
+            }
+            stream.close()
+            Self.lastBody = data
+        } else {
+            Self.lastBody = request.httpBody
+        }
+        let (status, body) = Self.handler?(request) ?? (500, Data())
+        let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: body)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() {}
+}
+
+final class SplitwiseAPITests: XCTestCase {
+    private func api(token: String? = "tok") -> SplitwiseAPI {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StubURLProtocol.self]
+        return SplitwiseAPI(token: { token }, session: URLSession(configuration: configuration))
+    }
+
+    override func tearDown() {
+        StubURLProtocol.handler = nil
+        super.tearDown()
+    }
+
+    func testRefusesToCallWithoutAToken() async {
+        do { _ = try await api(token: nil).currentUser(); XCTFail("should throw") }
+        catch { XCTAssertEqual(error as? SplitwiseError, .notConnected) }
+    }
+
+    func testSendsTheTokenAndReadsTheUser() async throws {
+        StubURLProtocol.handler = { _ in (200, Data(#"{"user":{"id":5,"first_name":"Daya","last_name":"D","email":"d@x.com"}}"#.utf8)) }
+        let user = try await api().currentUser()
+        XCTAssertEqual(user.id, 5)
+        XCTAssertEqual(StubURLProtocol.lastRequest?.value(forHTTPHeaderField: "Authorization"), "Bearer tok")
+        XCTAssertEqual(StubURLProtocol.lastRequest?.url?.absoluteString, "https://secure.splitwise.com/api/v3.0/get_current_user")
+    }
+
+    func testAnExpiredOrRevokedTokenIsReportedAsSignedOut() async {
+        StubURLProtocol.handler = { _ in (401, Data(#"{"error":"Invalid API Request: you are not logged in"}"#.utf8)) }
+        do { _ = try await api().friends(); XCTFail("should throw") }
+        catch { XCTAssertEqual(error as? SplitwiseError, .unauthorized) }
+    }
+
+    func testGroupsLeaveOutSplitwisesCatchAllGroupZero() async throws {
+        StubURLProtocol.handler = { _ in (200, Data(#"{"groups":[{"id":0,"name":"Non-group expenses"},{"id":42,"name":"Apartment"}]}"#.utf8)) }
+        let groups = try await api().groups()
+        XCTAssertEqual(groups.map(\.name), ["Apartment"])
+    }
+
+    func testCreateExpensePostsFormFieldsAndReturnsTheNewId() async throws {
+        StubURLProtocol.handler = { _ in (200, Data(#"{"expenses":[{"id":987}],"errors":{}}"#.utf8)) }
+        let id = try await api().createExpense(fields: ["cost": "55.00", "description": "Thai & Co", "details": "a\nb"])
+        XCTAssertEqual(id, 987)
+        XCTAssertEqual(StubURLProtocol.lastRequest?.httpMethod, "POST")
+        XCTAssertEqual(StubURLProtocol.lastRequest?.value(forHTTPHeaderField: "Content-Type"), "application/x-www-form-urlencoded; charset=utf-8")
+        let body = String(data: StubURLProtocol.lastBody ?? Data(), encoding: .utf8)
+        XCTAssertEqual(body, "cost=55.00&description=Thai%20%26%20Co&details=a%0Ab")
+    }
+
+    func testSplitwiseRefusingAnExpenseSurfacesItsReason() async {
+        // Splitwise reports validation problems with a 200 and an `errors` body.
+        StubURLProtocol.handler = { _ in (200, Data(#"{"expenses":[],"errors":{"base":["Sum of shares must equal the cost"]}}"#.utf8)) }
+        do { _ = try await api().createExpense(fields: [:]); XCTFail("should throw") }
+        catch { XCTAssertEqual(error as? SplitwiseError, .rejected(["Sum of shares must equal the cost"])) }
+    }
+
+    func testFormBodyEscapesEverythingThatCouldBreakTheEncoding() {
+        let body = String(data: SplitwiseAPI.formBody(["b": "x+y=z", "a": "é & 100%"]), encoding: .utf8)
+        XCTAssertEqual(body, "a=%C3%A9%20%26%20100%25&b=x%2By%3Dz")  // keys sorted, values fully escaped
+    }
+}
+
+final class SplitwiseSignInTests: XCTestCase {
+    func testStatesAreRandomLongAndURLSafe() {
+        let a = SplitwiseSignIn.newState(), b = SplitwiseSignIn.newState()
+        XCTAssertNotEqual(a, b)
+        XCTAssertGreaterThanOrEqual(a.count, 16)  // the server requires 16...128 of [A-Za-z0-9_-]
+        XCTAssertNotNil(a.range(of: "^[A-Za-z0-9_-]{16,128}$", options: .regularExpression))
+    }
+
+    func testAMatchingCallbackYieldsTheHandoffCode() {
+        let url = URL(string: "fin4u://splitwise/?handoff=abc123&state=S1")!
+        XCTAssertEqual(SplitwiseSignIn.parse(callback: url, expectedState: "S1"), .handoff("abc123"))
+    }
+
+    func testAWrongStateIsRejectedEvenWithAHandoff() {
+        let url = URL(string: "fin4u://splitwise/?handoff=abc123&state=EVIL")!
+        XCTAssertEqual(SplitwiseSignIn.parse(callback: url, expectedState: "S1"), .failed("state_mismatch"))
+    }
+
+    func testErrorsComeThroughAndHaveFriendlyMessages() {
+        let url = URL(string: "fin4u://splitwise/?error=access_denied&state=S1")!
+        XCTAssertEqual(SplitwiseSignIn.parse(callback: url, expectedState: "S1"), .failed("access_denied"))
+        XCTAssertEqual(SplitwiseSignIn.parse(callback: URL(string: "fin4u://splitwise/?state=S1")!, expectedState: "S1"), .failed("no_handoff"))
+        XCTAssertTrue(SplitwiseSignIn.message(forFailure: "not_configured").contains("isn't set up"))
+        XCTAssertTrue(SplitwiseSignIn.message(forFailure: "weird").contains("Try again"))
+    }
+}
+
+final class KeychainTests: XCTestCase {
+    private let service = "com.dhana.fin4u.tests.\(UUID().uuidString)"
+
+    override func tearDown() {
+        Keychain.delete(service: service, account: "a")
+        super.tearDown()
+    }
+
+    func testSaveReadReplaceAndDelete() {
+        XCTAssertNil(Keychain.read(service: service, account: "a"))
+        XCTAssertTrue(Keychain.save("first", service: service, account: "a"))
+        XCTAssertEqual(Keychain.read(service: service, account: "a"), "first")
+        XCTAssertTrue(Keychain.save("second", service: service, account: "a"))  // replaces, doesn't duplicate
+        XCTAssertEqual(Keychain.read(service: service, account: "a"), "second")
+        XCTAssertTrue(Keychain.delete(service: service, account: "a"))
+        XCTAssertNil(Keychain.read(service: service, account: "a"))
+    }
+}

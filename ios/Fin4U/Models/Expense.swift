@@ -24,6 +24,9 @@ final class Expense {
     var isShared: Bool = false
     /// The other person has paid their share back, so it's no longer owed.
     var isSettled: Bool = false
+    /// Set once the expense has been added to Splitwise (to avoid adding it twice).
+    var splitwiseExpenseID: Int?
+    var splitwisePostedAt: Date?
     /// JSON `SplitSnapshot` (who it's shared with + any hand-edited default).
     var splitData: Data?
 
