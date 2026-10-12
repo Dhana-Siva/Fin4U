@@ -17,7 +17,7 @@ if [ -n "${BUILD:-}" ]; then EXTRA+=(CURRENT_PROJECT_VERSION="$BUILD"); fi
 xcodegen generate >/dev/null
 xcodebuild archive -project Fin4U.xcodeproj -scheme Fin4U -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$OUT/Fin4U.xcarchive" \
-  -allowProvisioningUpdates "${EXTRA[@]}"
+  -allowProvisioningUpdates ${EXTRA[@]+"${EXTRA[@]}"}
 
 xcodebuild -exportArchive -archivePath "$OUT/Fin4U.xcarchive" \
   -exportOptionsPlist ExportOptions.plist -exportPath "$OUT/export" \
