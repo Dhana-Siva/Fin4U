@@ -655,7 +655,7 @@ final class OwedTests: XCTestCase {
     private func savedExpense(settled: Bool) throws -> (container: ModelContainer, expense: Expense) {
         let container = try ModelContainer(
             for: Expense.self, ExpenseItem.self, Person.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: PersonalStore.configuration(inMemory: true)
         )
         let context = container.mainContext
         let draft = ExpenseDraft(
@@ -694,7 +694,7 @@ final class OwedTests: XCTestCase {
     func testUnsharedExpensesOweNothing() throws {
         let container = try ModelContainer(
             for: Expense.self, ExpenseItem.self, Person.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: PersonalStore.configuration(inMemory: true)
         )
         let draft = ExpenseDraft(items: [DraftItem(name: "Milk", quantity: 1, cents: 400, category: .groceries)])
         draft.save(in: container.mainContext)
@@ -711,7 +711,7 @@ final class OwedTests: XCTestCase {
         draft.plan.isShared = false
         let container = try ModelContainer(
             for: Expense.self, ExpenseItem.self, Person.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: PersonalStore.configuration(inMemory: true)
         )
         draft.save(in: container.mainContext)
         XCTAssertFalse(try container.mainContext.fetch(FetchDescriptor<Expense>()).first!.isSettled)
@@ -1097,7 +1097,7 @@ final class SplitwisePosterTests: XCTestCase {
     private func container() throws -> ModelContainer {
         try ModelContainer(
             for: Expense.self, ExpenseItem.self, Person.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: PersonalStore.configuration(inMemory: true)
         )
     }
 
@@ -1216,7 +1216,7 @@ final class ManualTotalTests: XCTestCase {
     private func container() throws -> ModelContainer {
         try ModelContainer(
             for: Expense.self, ExpenseItem.self, Person.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: PersonalStore.configuration(inMemory: true)
         )
     }
 
@@ -1409,5 +1409,22 @@ final class HouseholdNoteTests: XCTestCase {
         XCTAssertNil(HouseholdNote(record: record(text: nil), fromSharedWithMe: false))
         XCTAssertNil(HouseholdNote(record: record(date: nil), fromSharedWithMe: false))
         XCTAssertNil(HouseholdNote(record: record(type: HouseholdCloud.rootType), fromSharedWithMe: false))
+    }
+}
+
+
+final class PersonalStoreTests: XCTestCase {
+    func testPersonalDataIsNeverSyncedToICloud() {
+        // The app has an iCloud entitlement, so this must be explicit.
+        XCTAssertEqual(String(describing: PersonalStore.configuration().cloudKitDatabase),
+                       String(describing: ModelConfiguration.CloudKitDatabase.none))
+    }
+
+    @MainActor
+    func testTheContainerOpensAndStoresAnExpense() throws {
+        let container = try PersonalStore.makeContainer(inMemory: true)
+        let draft = ExpenseDraft(merchant: "x", items: [DraftItem(name: "a", quantity: 1, cents: 100, category: .other)])
+        draft.save(in: container.mainContext)
+        XCTAssertEqual(try container.mainContext.fetch(FetchDescriptor<Expense>()).count, 1)
     }
 }

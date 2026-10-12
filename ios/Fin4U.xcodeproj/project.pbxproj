@@ -49,6 +49,7 @@
 		E378587F4814486B4BDA338F /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D32EAC5138C9EC39FB66B3 /* DocumentScannerView.swift */; };
 		E69E2ED767C641090C35A9D4 /* Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F257BDCB759A75AFCFFCB693 /* Profile.swift */; };
 		F2B90473C73D3DD6C435198C /* HouseholdCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4BED225B49FABB7DA955B9 /* HouseholdCloud.swift */; };
+		F54BE9DA3333B59F7CDD5DBD /* PersonalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCF29D329E12C8EC9C9CB91 /* PersonalStore.swift */; };
 		FFC1F569E363A4B4C7CABD2C /* OwedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A94A24F04E14839F8EE290 /* OwedView.swift */; };
 /* End PBXBuildFile section */
 
@@ -105,12 +106,13 @@
 		D9329FD89DA555C79E2FC3BD /* SplitwisePoster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitwisePoster.swift; sourceTree = "<group>"; };
 		E5728FE4436C7348F8040789 /* CentsField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CentsField.swift; sourceTree = "<group>"; };
 		EED964F7CBD09E59BC1345DF /* SplitwisePayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitwisePayload.swift; sourceTree = "<group>"; };
+		EFCF29D329E12C8EC9C9CB91 /* PersonalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalStore.swift; sourceTree = "<group>"; };
 		F10BEFD57D544C442B76F4E3 /* ReceiptAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptAPI.swift; sourceTree = "<group>"; };
 		F257BDCB759A75AFCFFCB693 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
 		F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_166C53EB-A527-429B-9D57-B58E884CEDBF" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_126470A8-B27A-4AD1-8E11-BB65BC36481A" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -211,6 +213,7 @@
 				0B22E27C540F4805644321EF /* ExpenseDraft.swift */,
 				1825A8EC34FA7999EBAA61D6 /* ParsedReceipt.swift */,
 				89814D7083EE7A8DF906C375 /* Person.swift */,
+				EFCF29D329E12C8EC9C9CB91 /* PersonalStore.swift */,
 				F257BDCB759A75AFCFFCB693 /* Profile.swift */,
 				A06EFD798F456185AD51D5FF /* SpendStats.swift */,
 				5AFCA25D93426682FFB85DB6 /* Split.swift */,
@@ -311,10 +314,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_3CA7A1F3-5F0A-406C-8F52-471050CAE51A" /* ios */ = {
+		"TEMP_7F3B4CCA-491C-4FB7-B7FC-0335EDAABD9D" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_166C53EB-A527-429B-9D57-B58E884CEDBF" /* Secrets.xcconfig */,
+				"TEMP_126470A8-B27A-4AD1-8E11-BB65BC36481A" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -442,6 +445,7 @@
 				FFC1F569E363A4B4C7CABD2C /* OwedView.swift in Sources */,
 				D9438FFE7C047CB615FD443C /* ParsedReceipt.swift in Sources */,
 				857EE977008329B1D67FBDDA /* Person.swift in Sources */,
+				F54BE9DA3333B59F7CDD5DBD /* PersonalStore.swift in Sources */,
 				E69E2ED767C641090C35A9D4 /* Profile.swift in Sources */,
 				90A5272F7CBAA38839D45443 /* ProfileView.swift in Sources */,
 				970371B8615F94EC17C2A5A3 /* ReceiptAPI.swift in Sources */,
@@ -515,7 +519,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_166C53EB-A527-429B-9D57-B58E884CEDBF" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_126470A8-B27A-4AD1-8E11-BB65BC36481A" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -579,7 +583,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_166C53EB-A527-429B-9D57-B58E884CEDBF" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_126470A8-B27A-4AD1-8E11-BB65BC36481A" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

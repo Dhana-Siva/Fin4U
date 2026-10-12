@@ -12,6 +12,10 @@ struct Fin4UApp: App {
     @State private var profile = Profile()
     @State private var splitwise = SplitwiseSession()
     @State private var household = HouseholdCloud()
+    private let personalContainer: ModelContainer = {
+        do { return try PersonalStore.makeContainer() }
+        catch { fatalError("Couldn't open the personal database: \(error)") }
+    }()
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
@@ -33,6 +37,6 @@ struct Fin4UApp: App {
             }
             .task { if Config.splitwiseEnabled { await splitwise.refresh() } }
         }
-        .modelContainer(for: [Expense.self, ExpenseItem.self, Person.self])
+        .modelContainer(personalContainer)
     }
 }
