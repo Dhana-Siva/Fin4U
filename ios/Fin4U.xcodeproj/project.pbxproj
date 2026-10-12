@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		08A3E630DAF14F9585D45DED /* MonthlyChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE61A8D9432D0B2D159BB725 /* MonthlyChart.swift */; };
 		0FE7A68F7D8B27B57C86A21E /* CentsField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5728FE4436C7348F8040789 /* CentsField.swift */; };
+		1451D3EFB300AD5015767768 /* DashboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A87EF4E7CD828AC98FD4E4 /* DashboardLayout.swift */; };
 		1F9728010D49D6D7AAEE7103 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7940272E3D7237720127A350 /* Assets.xcassets */; };
 		48D7EE17E65147114B9CB54E /* DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D30E6F2C70DA312A14D6FF /* DemoData.swift */; };
 		571AE505148F55ED62965F73 /* ExpenseCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CBDF0F0B6FA4887FECA9AD /* ExpenseCategory.swift */; };
@@ -59,6 +60,7 @@
 		26A95A19B53D8D4F344FC466 /* DayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayView.swift; sourceTree = "<group>"; };
 		2A62C392F0E64975316F9EDD /* Fin4UTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fin4UTests.swift; sourceTree = "<group>"; };
 		3563A80F7AB8CCD32808D93F /* MonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthView.swift; sourceTree = "<group>"; };
+		37A87EF4E7CD828AC98FD4E4 /* DashboardLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardLayout.swift; sourceTree = "<group>"; };
 		3BE447D02068977EF8FD8320 /* ScanFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanFlowView.swift; sourceTree = "<group>"; };
 		5AFCA25D93426682FFB85DB6 /* Split.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Split.swift; sourceTree = "<group>"; };
 		6FBD6393FCA56E5A0A469982 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -81,7 +83,7 @@
 		F257BDCB759A75AFCFFCB693 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_39028330-6F7B-4305-8417-8FDFE23AD94D" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_C13D918D-AA45-461C-8AD4-E8F969EE83CD" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -157,6 +159,7 @@
 		66F223D9F627F68A13FF41A4 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				37A87EF4E7CD828AC98FD4E4 /* DashboardLayout.swift */,
 				C93E2816A46FFF6A21B95E44 /* Expense.swift */,
 				D7CBDF0F0B6FA4887FECA9AD /* ExpenseCategory.swift */,
 				0B22E27C540F4805644321EF /* ExpenseDraft.swift */,
@@ -235,10 +238,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_65A40D14-50DA-4B9A-BBC8-0CDC91C55A3A" /* ios */ = {
+		"TEMP_7DF6158B-C446-49CD-AF63-7F7232A2EB30" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_39028330-6F7B-4305-8417-8FDFE23AD94D" /* Secrets.xcconfig */,
+				"TEMP_C13D918D-AA45-461C-8AD4-E8F969EE83CD" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -344,6 +347,7 @@
 				0FE7A68F7D8B27B57C86A21E /* CentsField.swift in Sources */,
 				96D581B0D1E1D80A82DDBB26 /* Config.swift in Sources */,
 				898B690FE3C8360C59DB120B /* DashboardComponents.swift in Sources */,
+				1451D3EFB300AD5015767768 /* DashboardLayout.swift in Sources */,
 				737EC3E51E2F11B0EF52972A /* DayView.swift in Sources */,
 				48D7EE17E65147114B9CB54E /* DemoData.swift in Sources */,
 				A7E6BD753BA24073897F37D7 /* DisclosureView.swift in Sources */,
@@ -424,7 +428,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_39028330-6F7B-4305-8417-8FDFE23AD94D" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_C13D918D-AA45-461C-8AD4-E8F969EE83CD" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -488,7 +492,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_39028330-6F7B-4305-8417-8FDFE23AD94D" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_C13D918D-AA45-461C-8AD4-E8F969EE83CD" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

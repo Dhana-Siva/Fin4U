@@ -827,3 +827,33 @@ final class MonthSeriesTests: XCTestCase {
         XCTAssertEqual(SpendStats.monthSeries([:], calendar: calendar).map(\.cents), Array(repeating: 0, count: 12))
     }
 }
+
+final class CollapsedSectionsTests: XCTestCase {
+    func testNothingIsCollapsedByDefault() {
+        let collapsed = CollapsedSections(raw: "")
+        XCTAssertTrue(DashboardSection.allCases.allSatisfy { !collapsed.contains($0) })
+    }
+
+    func testTogglingCollapsesAndExpands() {
+        var collapsed = CollapsedSections(raw: "")
+        collapsed.toggle(.chart)
+        XCTAssertTrue(collapsed.contains(.chart))
+        XCTAssertFalse(collapsed.contains(.recent))
+        collapsed.toggle(.chart)
+        XCTAssertFalse(collapsed.contains(.chart))
+    }
+
+    func testItRoundTripsThroughItsStoredString() {
+        var collapsed = CollapsedSections(raw: "")
+        collapsed.toggle(.recent)
+        collapsed.toggle(.summary)
+        let restored = CollapsedSections(raw: collapsed.raw)
+        XCTAssertEqual(restored, collapsed)
+        XCTAssertEqual(collapsed.raw, "recent,summary")  // stable order
+    }
+
+    func testUnknownNamesAreIgnored() {
+        let collapsed = CollapsedSections(raw: "chart,somethingNew,,recent")
+        XCTAssertEqual(collapsed.sections, [.chart, .recent])
+    }
+}

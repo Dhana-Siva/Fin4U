@@ -50,13 +50,17 @@ struct PeriodCard: View {
 struct OwedCard: View {
     let spends: [Spend]
     let currency: String
+    /// Off when a section header already says "Owed to you".
+    var showTitle = true
 
     var body: some View {
         let people = SpendStats.owed(spends, currency: currency)
         VStack(alignment: .leading, spacing: 10) {
-            Text("Owed to you")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            if showTitle {
+                Text("Owed to you")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
 
             Text(Money.format(people.reduce(0) { $0 + $1.cents }, currency: currency))
                 .font(.system(size: 34, weight: .bold, design: .rounded))
@@ -98,6 +102,46 @@ struct CategoryBars: View {
                     .tint(entry.category.color)
             }
         }
+    }
+}
+
+/// A dashboard section heading that minimises or expands its section when
+/// tapped. While minimised it can show the section's key figure, so the
+/// number is still visible without the detail.
+struct CollapsibleHeader: View {
+    let title: String
+    let isExpanded: Bool
+    var summary: String?
+    var prominent = false
+    let toggle: () -> Void
+
+    var body: some View {
+        Button(action: toggle) {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(prominent ? .title2.bold() : .headline)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Spacer(minLength: 8)
+                if !isExpanded, let summary {
+                    Text(summary)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                Image(systemName: "chevron.down")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(isExpanded ? 0 : -90))
+            }
+            .foregroundColor(.primary)
+            .textCase(nil)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityValue(isExpanded ? "Expanded" : "Minimised")
+        .accessibilityHint(isExpanded ? "Double tap to minimise" : "Double tap to expand")
     }
 }
 

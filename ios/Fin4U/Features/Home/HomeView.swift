@@ -94,69 +94,102 @@ struct HomeView: View {
         }
     }
 
+    // MARK: Minimising sections
+
+    @AppStorage("dashboardCollapsedSections") private var collapsedRaw = ""
+
+    private func isExpanded(_ section: DashboardSection) -> Bool {
+        !CollapsedSections(raw: collapsedRaw).contains(section)
+    }
+
+    private func toggle(_ section: DashboardSection) {
+        var collapsed = CollapsedSections(raw: collapsedRaw)
+        collapsed.toggle(section)
+        withAnimation(.easeInOut(duration: 0.2)) { collapsedRaw = collapsed.raw }
+    }
+
+    private func header(_ section: DashboardSection, _ title: String, summary: String? = nil, prominent: Bool = false) -> some View {
+        CollapsibleHeader(
+            title: title,
+            isExpanded: isExpanded(section),
+            summary: summary,
+            prominent: prominent
+        ) { toggle(section) }
+    }
+
+    private func money(_ cents: Int) -> String { Money.format(cents, currency: currency) }
+
     // MARK: Sections
 
     private var yearSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Button { shownYear -= 1 } label: { Image(systemName: "chevron.left") }
-                        .disabled(shownYear <= availableYears.lowerBound)
-                    Spacer()
-                    Text(verbatim: String(shownYear)).font(.headline)
-                    Spacer()
-                    Button { shownYear += 1 } label: { Image(systemName: "chevron.right") }
-                        .disabled(shownYear >= currentYear)
-                }
-                .buttonStyle(.borderless)
+        let yearSpends = spends(inYear: shownYear)
+        return Section {
+            if isExpanded(.summary) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Button { shownYear -= 1 } label: { Image(systemName: "chevron.left") }
+                            .disabled(shownYear <= availableYears.lowerBound)
+                        Spacer()
+                        Text(verbatim: String(shownYear)).font(.headline)
+                        Spacer()
+                        Button { shownYear += 1 } label: { Image(systemName: "chevron.right") }
+                            .disabled(shownYear >= currentYear)
+                    }
+                    .buttonStyle(.borderless)
 
-                PeriodCard(
-                    title: shownYear == currentYear ? "Year to date" : "Total for \(String(shownYear))",
-                    spends: spends(inYear: shownYear),
-                    currency: currency
-                )
+                    PeriodCard(
+                        title: shownYear == currentYear ? "Year to date" : "Total for \(String(shownYear))",
+                        spends: yearSpends,
+                        currency: currency
+                    )
+                }
             }
         } header: {
-            Text("Your expenses summary")
-                .font(.title2.bold())
-                .foregroundColor(.primary)
-                .textCase(nil)
+            header(.summary, "Your expenses summary",
+                   summary: money(SpendStats.total(yearSpends, currency: currency)), prominent: true)
         }
     }
 
     private var chartSection: some View {
         let totals = SpendStats.monthlyTotals(spends, year: shownYear, currency: currency)
         return Section {
-            if totals.isEmpty {
-                Text("Nothing spent in \(String(shownYear)).").foregroundStyle(.secondary)
-            } else {
-                MonthlyChart(
-                    series: SpendStats.monthSeries(totals),
-                    currency: currency,
-                    highlightedMonth: shownYear == currentYear ? calendar.component(.month, from: Date()) : nil
-                ) { month in
-                    if let first = calendar.date(from: DateComponents(year: shownYear, month: month, day: 1)) {
-                        path.append(.month(first))
+            if isExpanded(.chart) {
+                if totals.isEmpty {
+                    Text("Nothing spent in \(String(shownYear)).").foregroundStyle(.secondary)
+                } else {
+                    MonthlyChart(
+                        series: SpendStats.monthSeries(totals),
+                        currency: currency,
+                        highlightedMonth: shownYear == currentYear ? calendar.component(.month, from: Date()) : nil
+                    ) { month in
+                        if let first = calendar.date(from: DateComponents(year: shownYear, month: month, day: 1)) {
+                            path.append(.month(first))
+                        }
                     }
                 }
             }
         } header: {
-            Text("Spend by month, \(String(shownYear))")
+            header(.chart, "Spend by month, \(String(shownYear))")
         } footer: {
-            if !totals.isEmpty { Text("Tap a bar to open that month.") }
+            if isExpanded(.chart), !totals.isEmpty { Text("Tap a bar to open that month.") }
         }
     }
 
     private var monthToDateSection: some View {
         Section {
-            NavigationLink(value: DashboardRoute.month(firstOfThisMonth)) {
-                PeriodCard(
-                    title: "Month to date -- \(Date().formatted(.dateTime.month(.wide)))",
-                    spends: thisMonth,
-                    currency: currency,
-                    showCategories: false
-                )
+            if isExpanded(.monthToDate) {
+                NavigationLink(value: DashboardRoute.month(firstOfThisMonth)) {
+                    PeriodCard(
+                        title: Date().formatted(.dateTime.month(.wide).year()),
+                        spends: thisMonth,
+                        currency: currency,
+                        showCategories: false
+                    )
+                }
             }
+        } header: {
+            header(.monthToDate, "Month to date",
+                   summary: money(SpendStats.total(thisMonth, currency: currency)))
         }
     }
 
@@ -164,11 +197,16 @@ struct HomeView: View {
     /// only while someone actually owes something.
     @ViewBuilder
     private var owedSection: some View {
-        if SpendStats.totalOwed(spends, currency: currency) > 0 {
+        let owed = SpendStats.totalOwed(spends, currency: currency)
+        if owed > 0 {
             Section {
-                NavigationLink(value: DashboardRoute.owed) {
-                    OwedCard(spends: spends, currency: currency)
+                if isExpanded(.owed) {
+                    NavigationLink(value: DashboardRoute.owed) {
+                        OwedCard(spends: spends, currency: currency, showTitle: false)
+                    }
                 }
+            } header: {
+                header(.owed, "Owed to you", summary: money(owed))
             }
         }
     }
@@ -179,36 +217,44 @@ struct HomeView: View {
         let months = (1...lastMonth).reversed().filter { totals[$0] != nil }
         let largest = totals.values.max() ?? 1
 
-        return Section("By month") {
-            if months.isEmpty {
-                Text("Nothing spent in \(String(shownYear)).").foregroundStyle(.secondary)
-            }
-            ForEach(months, id: \.self) { month in
-                let first = calendar.date(from: DateComponents(year: shownYear, month: month, day: 1)) ?? Date()
-                NavigationLink(value: DashboardRoute.month(first)) {
-                    BarRow(
-                        title: first.formatted(.dateTime.month(.wide)),
-                        subtitle: nil,
-                        cents: totals[month] ?? 0,
-                        largest: largest,
-                        currency: currency
-                    )
+        return Section {
+            if isExpanded(.byMonth) {
+                if months.isEmpty {
+                    Text("Nothing spent in \(String(shownYear)).").foregroundStyle(.secondary)
+                }
+                ForEach(months, id: \.self) { month in
+                    let first = calendar.date(from: DateComponents(year: shownYear, month: month, day: 1)) ?? Date()
+                    NavigationLink(value: DashboardRoute.month(first)) {
+                        BarRow(
+                            title: first.formatted(.dateTime.month(.wide)),
+                            subtitle: nil,
+                            cents: totals[month] ?? 0,
+                            largest: largest,
+                            currency: currency
+                        )
+                    }
                 }
             }
+        } header: {
+            header(.byMonth, "By month")
         }
     }
 
     private var recentSection: some View {
-        Section("Recent") {
-            ForEach(expenses.prefix(5)) { expense in
-                Button {
-                    editingDraft = ExpenseDraft(expense: expense)
-                } label: {
-                    ExpenseRow(expense: expense)
+        Section {
+            if isExpanded(.recent) {
+                ForEach(expenses.prefix(5)) { expense in
+                    Button {
+                        editingDraft = ExpenseDraft(expense: expense)
+                    } label: {
+                        ExpenseRow(expense: expense)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
+                .onDelete(perform: delete)
             }
-            .onDelete(perform: delete)
+        } header: {
+            header(.recent, "Recent")
         }
     }
 
