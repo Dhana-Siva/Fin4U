@@ -204,3 +204,21 @@ def test_items_carry_a_category_and_the_schema_requires_it(client, monkeypatch):
 def test_item_without_a_category_still_parses(client, monkeypatch):
     use_fake(monkeypatch, text=receipt_json())  # fixture items predate item categories
     assert post(client).json()["items"][0]["category"] == ""
+
+
+def test_missing_anthropic_key_is_a_clean_503_not_a_crash(client, monkeypatch):
+    import anthropic
+
+    def no_key():
+        raise anthropic.AnthropicError("The api_key client option must be set")
+
+    monkeypatch.setattr(backend, "get_client", no_key)
+    response = post(client)
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Server is not configured."
+
+
+def test_api_docs_are_not_published_by_default(client):
+    assert client.get("/docs").status_code == 404
+    assert client.get("/openapi.json").status_code == 404
+    assert client.get("/health").status_code == 200

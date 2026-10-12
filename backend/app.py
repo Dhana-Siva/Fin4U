@@ -215,7 +215,15 @@ def parse_receipt_image(image_bytes: bytes, media_type: str, client=None) -> Par
         raise ReceiptParseError("Couldn't read that receipt. Try retaking the photo.") from exc
 
 
-app = FastAPI(title="Receipt parsing backend")
+# The interactive API docs are a convenience for local development; there's
+# no reason to publish them (or the schema) on a deployed server.
+_docs = os.environ.get("ENABLE_DOCS") == "1"
+app = FastAPI(
+    title="Receipt parsing backend",
+    docs_url="/docs" if _docs else None,
+    redoc_url=None,
+    openapi_url="/openapi.json" if _docs else None,
+)
 
 
 @app.get("/health")
@@ -258,6 +266,11 @@ def parse_receipt(
         # Class name only: exception text can echo request details.
         log.error("Anthropic call failed (%s)", type(exc).__name__)
         raise HTTPException(status_code=502, detail="Couldn't reach the receipt reader. Try again.") from exc
+    except anthropic.AnthropicError as exc:
+        # Not an API failure: the client couldn't even be built, i.e. no
+        # ANTHROPIC_API_KEY on this server.
+        log.error("Anthropic client is not configured (%s)", type(exc).__name__)
+        raise HTTPException(status_code=503, detail="Server is not configured.") from exc
 
     if not parsed.is_receipt:
         raise HTTPException(status_code=422, detail="That doesn't look like a receipt.")
