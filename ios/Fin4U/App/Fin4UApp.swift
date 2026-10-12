@@ -8,14 +8,18 @@ struct Fin4UApp: App {
     // who'd already passed it would silently skip a disclosure added later
     // (exactly how Amma's App Store disclosure went unseen by a reviewer).
     @AppStorage("receiptDisclosureAcknowledged") private var acknowledged = false
+    @State private var profile = Profile()
 
     var body: some Scene {
         WindowGroup {
-            if acknowledged {
-                HomeView()
-            } else {
-                DisclosureView { acknowledged = true }
+            Group {
+                if acknowledged {
+                    HomeView()
+                } else {
+                    DisclosureView { acknowledged = true }
+                }
             }
+            .environment(profile)
         }
         .modelContainer(for: [Expense.self, ExpenseItem.self, Person.self])
     }

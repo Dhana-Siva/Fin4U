@@ -13,6 +13,8 @@ struct HomeView: View {
     ])
     private var expenses: [Expense]
 
+    @Environment(Profile.self) private var profile
+    @State private var showingProfile = false
     @State private var scanning = false
     @State private var editingDraft: ExpenseDraft?
     @State private var shownYear = Calendar.current.component(.year, from: Date())
@@ -51,7 +53,10 @@ struct HomeView: View {
                     recentSection
                 }
             }
-            .navigationTitle("Fin4U")
+            .navigationTitle(Greeting.title(
+                firstName: profile.firstName,
+                hour: calendar.component(.hour, from: Date())
+            ))
             .navigationDestination(for: DashboardRoute.self) { route in
                 switch route {
                 case .month(let month): MonthView(month: month, currency: currency)
@@ -60,6 +65,12 @@ struct HomeView: View {
                 }
             }
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showingProfile = true } label: {
+                        AvatarView(size: 32)
+                    }
+                    .accessibilityLabel("Profile")
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button { scanning = true } label: {
                         Label("Scan receipt", systemImage: "camera.viewfinder")
@@ -68,6 +79,9 @@ struct HomeView: View {
             }
             .fullScreenCover(isPresented: $scanning) {
                 ScanFlowView()
+            }
+            .sheet(isPresented: $showingProfile) {
+                ProfileView()
             }
             .expenseEditor($editingDraft)
             .task {

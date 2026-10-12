@@ -717,3 +717,90 @@ final class OwedTests: XCTestCase {
         XCTAssertFalse(try container.mainContext.fetch(FetchDescriptor<Expense>()).first!.isSettled)
     }
 }
+
+final class ProfileTests: XCTestCase {
+    private var directory: URL!
+    private var defaults: UserDefaults!
+    private var suite: String!
+
+    override func setUp() {
+        super.setUp()
+        directory = FileManager.default.temporaryDirectory.appendingPathComponent("profile-\(UUID().uuidString)")
+        suite = "profile-tests-\(UUID().uuidString)"
+        defaults = UserDefaults(suiteName: suite)
+    }
+
+    override func tearDown() {
+        try? FileManager.default.removeItem(at: directory)
+        defaults.removePersistentDomain(forName: suite)
+        super.tearDown()
+    }
+
+    private func makeProfile() -> Profile { Profile(defaults: defaults, directory: directory) }
+
+    private func imageData(width: CGFloat, height: CGFloat) -> Data {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format).image { context in
+            UIColor.systemTeal.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        }.pngData()!
+    }
+
+    func testInitialsAndFirstName() {
+        let profile = makeProfile()
+        XCTAssertEqual(profile.initials, "")
+        profile.name = "  Dhana Siva  "
+        XCTAssertEqual(profile.displayName, "Dhana Siva")
+        XCTAssertEqual(profile.firstName, "Dhana")
+        XCTAssertEqual(profile.initials, "DS")
+        profile.name = "dhana"
+        XCTAssertEqual(profile.initials, "D")
+        profile.name = "Mary Ann Smith"
+        XCTAssertEqual(profile.initials, "MS")
+    }
+
+    func testNameSurvivesRelaunch() {
+        makeProfile().name = "Dhana"
+        XCTAssertEqual(makeProfile().name, "Dhana")
+    }
+
+    func testPhotoIsCroppedToASquareAndShrunk() throws {
+        let profile = makeProfile()
+        XCTAssertTrue(profile.setPhoto(from: imageData(width: 3000, height: 1500)))
+        let stored = try XCTUnwrap(profile.photo)
+        XCTAssertEqual(stored.size.width, stored.size.height)
+        XCTAssertLessThanOrEqual(stored.size.width, Profile.photoSide)
+        XCTAssertLessThan(try XCTUnwrap(profile.photoData).count, 200_000)
+    }
+
+    func testSmallPhotosAreNotBlownUp() throws {
+        let profile = makeProfile()
+        XCTAssertTrue(profile.setPhoto(from: imageData(width: 200, height: 300)))
+        XCTAssertEqual(try XCTUnwrap(profile.photo).size.width, 200)
+    }
+
+    func testPhotoSurvivesRelaunchAndCanBeRemoved() {
+        let profile = makeProfile()
+        XCTAssertTrue(profile.setPhoto(from: imageData(width: 400, height: 400)))
+        XCTAssertTrue(makeProfile().hasPhoto)
+        profile.removePhoto()
+        XCTAssertFalse(profile.hasPhoto)
+        XCTAssertFalse(makeProfile().hasPhoto)
+    }
+
+    func testBadImageDataIsRejectedAndKeepsTheOldPhoto() {
+        let profile = makeProfile()
+        XCTAssertTrue(profile.setPhoto(from: imageData(width: 100, height: 100)))
+        XCTAssertFalse(profile.setPhoto(from: Data("not an image".utf8)))
+        XCTAssertTrue(profile.hasPhoto)
+    }
+
+    func testGreetingFollowsTheTimeOfDay() {
+        XCTAssertEqual(Greeting.title(firstName: "Dhana", hour: 8), "Good morning, Dhana")
+        XCTAssertEqual(Greeting.title(firstName: "Dhana", hour: 14), "Good afternoon, Dhana")
+        XCTAssertEqual(Greeting.title(firstName: "Dhana", hour: 20), "Good evening, Dhana")
+        XCTAssertEqual(Greeting.title(firstName: "Dhana", hour: 2), "Good evening, Dhana")
+        XCTAssertEqual(Greeting.title(firstName: "", hour: 9), "Fin4U")
+    }
+}

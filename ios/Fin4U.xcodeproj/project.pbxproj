@@ -19,6 +19,7 @@
 		78430DCEB17477A63666554E /* Fin4UApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E85C7259B1E1B2A65FFB934 /* Fin4UApp.swift */; };
 		857EE977008329B1D67FBDDA /* Person.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89814D7083EE7A8DF906C375 /* Person.swift */; };
 		898B690FE3C8360C59DB120B /* DashboardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE369F648A17B2B56F56F939 /* DashboardComponents.swift */; };
+		90A5272F7CBAA38839D45443 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057DC4C281102CC5F863C542 /* ProfileView.swift */; };
 		96D581B0D1E1D80A82DDBB26 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8966D05765DBDF0EB65A5 /* Config.swift */; };
 		970371B8615F94EC17C2A5A3 /* ReceiptAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10BEFD57D544C442B76F4E3 /* ReceiptAPI.swift */; };
 		9EC72537E0B8679AD13E3AA1 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156370F06E719A82FE10B7E5 /* ReviewView.swift */; };
@@ -32,6 +33,7 @@
 		D9438FFE7C047CB615FD443C /* ParsedReceipt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1825A8EC34FA7999EBAA61D6 /* ParsedReceipt.swift */; };
 		DA30E52BF20AB96E059F9DF7 /* Expense.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93E2816A46FFF6A21B95E44 /* Expense.swift */; };
 		E378587F4814486B4BDA338F /* DocumentScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D32EAC5138C9EC39FB66B3 /* DocumentScannerView.swift */; };
+		E69E2ED767C641090C35A9D4 /* Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F257BDCB759A75AFCFFCB693 /* Profile.swift */; };
 		FFC1F569E363A4B4C7CABD2C /* OwedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A94A24F04E14839F8EE290 /* OwedView.swift */; };
 /* End PBXBuildFile section */
 
@@ -47,6 +49,7 @@
 
 /* Begin PBXFileReference section */
 		02A94A24F04E14839F8EE290 /* OwedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwedView.swift; sourceTree = "<group>"; };
+		057DC4C281102CC5F863C542 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		0B22E27C540F4805644321EF /* ExpenseDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseDraft.swift; sourceTree = "<group>"; };
 		115D8796BEAC28563252884A /* Reconciliation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reconciliation.swift; sourceTree = "<group>"; };
 		156370F06E719A82FE10B7E5 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
@@ -73,9 +76,10 @@
 		D7CBDF0F0B6FA4887FECA9AD /* ExpenseCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseCategory.swift; sourceTree = "<group>"; };
 		E5728FE4436C7348F8040789 /* CentsField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CentsField.swift; sourceTree = "<group>"; };
 		F10BEFD57D544C442B76F4E3 /* ReceiptAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptAPI.swift; sourceTree = "<group>"; };
+		F257BDCB759A75AFCFFCB693 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_37C08F0E-CBDB-43FC-9FC5-5273543EDA70" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_85FD7F19-3D33-4BCD-AE7A-A055D9CF94A4" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -101,6 +105,14 @@
 				3BE447D02068977EF8FD8320 /* ScanFlowView.swift */,
 			);
 			path = Scan;
+			sourceTree = "<group>";
+		};
+		3911C3EE62AFFAAD444970E4 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				057DC4C281102CC5F863C542 /* ProfileView.swift */,
+			);
+			path = Profile;
 			sourceTree = "<group>";
 		};
 		3DC059EA489201A7C50EA4BA /* Products */ = {
@@ -147,6 +159,7 @@
 				0B22E27C540F4805644321EF /* ExpenseDraft.swift */,
 				1825A8EC34FA7999EBAA61D6 /* ParsedReceipt.swift */,
 				89814D7083EE7A8DF906C375 /* Person.swift */,
+				F257BDCB759A75AFCFFCB693 /* Profile.swift */,
 				A06EFD798F456185AD51D5FF /* SpendStats.swift */,
 				5AFCA25D93426682FFB85DB6 /* Split.swift */,
 			);
@@ -187,6 +200,7 @@
 				5FF004669C8D8E70E7EC2BB5 /* Dashboard */,
 				594FE62C213D407A47AF5D72 /* Disclosure */,
 				52FCE16C4A028F9537DD5E6C /* Home */,
+				3911C3EE62AFFAAD444970E4 /* Profile */,
 				AD5A293FB5A3371B44E07F49 /* Review */,
 				1C419D3DD32A74CD70A2941D /* Scan */,
 			);
@@ -218,10 +232,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_0B86D3C9-1B77-4719-9621-5D67590EBB24" /* ios */ = {
+		"TEMP_3CBA2823-5884-42E8-994F-71B293E9D0DE" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_37C08F0E-CBDB-43FC-9FC5-5273543EDA70" /* Secrets.xcconfig */,
+				"TEMP_85FD7F19-3D33-4BCD-AE7A-A055D9CF94A4" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -342,6 +356,8 @@
 				FFC1F569E363A4B4C7CABD2C /* OwedView.swift in Sources */,
 				D9438FFE7C047CB615FD443C /* ParsedReceipt.swift in Sources */,
 				857EE977008329B1D67FBDDA /* Person.swift in Sources */,
+				E69E2ED767C641090C35A9D4 /* Profile.swift in Sources */,
+				90A5272F7CBAA38839D45443 /* ProfileView.swift in Sources */,
 				970371B8615F94EC17C2A5A3 /* ReceiptAPI.swift in Sources */,
 				74320BB82A583018E2CB2138 /* Reconciliation.swift in Sources */,
 				9EC72537E0B8679AD13E3AA1 /* ReviewView.swift in Sources */,
@@ -404,7 +420,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_37C08F0E-CBDB-43FC-9FC5-5273543EDA70" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_85FD7F19-3D33-4BCD-AE7A-A055D9CF94A4" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -468,7 +484,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_37C08F0E-CBDB-43FC-9FC5-5273543EDA70" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_85FD7F19-3D33-4BCD-AE7A-A055D9CF94A4" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
