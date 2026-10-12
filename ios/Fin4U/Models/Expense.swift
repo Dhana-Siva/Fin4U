@@ -24,6 +24,9 @@ final class Expense {
     var isShared: Bool = false
     /// The other person has paid their share back, so it's no longer owed.
     var isSettled: Bool = false
+    /// Part of the total that isn't in the items (the user typed a total that
+    /// differs from items + tax + tip). Shared out like tax and tip.
+    var adjustmentCents: Int = 0
     /// Set once the expense has been added to Splitwise (to avoid adding it twice).
     var splitwiseExpenseID: Int?
     var splitwisePostedAt: Date?
@@ -124,7 +127,7 @@ extension Expense {
     }
 
     var personTotals: [PersonTotal] {
-        ExpenseMath.personTotals(plan: splitPlan, lines: lines, taxCents: taxCents, tipCents: tipCents)
+        ExpenseMath.personTotals(plan: splitPlan, lines: lines, taxCents: taxCents, tipCents: tipCents, adjustmentCents: adjustmentCents)
     }
 
     /// What other people still owe the owner for this expense. The owner is
@@ -142,7 +145,7 @@ extension Expense {
     var myCategoryTotals: [ExpenseCategory: Int] {
         ExpenseMath.categoryTotals(
             for: Participant.me.id, plan: splitPlan, lines: lines,
-            taxCents: taxCents, tipCents: tipCents, receiptCategory: category
+            taxCents: taxCents, tipCents: tipCents, adjustmentCents: adjustmentCents, receiptCategory: category
         )
     }
 }

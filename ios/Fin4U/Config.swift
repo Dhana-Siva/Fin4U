@@ -16,6 +16,11 @@ enum Config {
         return value
     }
 
+    /// Splitwise posting is built and tested but switched off: Splitwise's API
+    /// needs a paid Pro subscription to register an app. Flip to true (and set
+    /// the server's SPLITWISE_* keys) if that ever changes.
+    static let splitwiseEnabled = false
+
     /// Needs a real hosted page before TestFlight / App Store -- Apple
     /// requires the policy itself (not just in-app text) to disclose the
     /// Anthropic data flow.

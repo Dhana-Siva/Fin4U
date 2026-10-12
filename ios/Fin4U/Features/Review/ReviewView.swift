@@ -30,9 +30,16 @@ struct ReviewView: View {
                         ForEach(draft.checks, id: \.self) { message in
                             Text(message).font(.footnote)
                         }
-                        Text("Compare with your receipt and fix any item below. This disappears once the numbers add up.")
+                        Text("Compare with your receipt and fix any item below, or type the total yourself. This disappears once the numbers add up.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
+                        if draft.canUseReceiptTotal {
+                            Button("Use the receipt's total (\(Money.format(draft.printedTotalCents, currency: draft.currency)))") {
+                                withAnimation { draft.useReceiptTotal() }
+                            }
+                            .font(.footnote.weight(.semibold))
+                            .buttonStyle(.borderless)
+                        }
                     }
                 }
             }
@@ -116,7 +123,7 @@ struct ReviewView: View {
                 }
             }
 
-            Section("Totals") {
+            Section {
                 totalRow("Subtotal", draft.subtotalCents)
                 HStack {
                     Text("Tax")
@@ -128,7 +135,36 @@ struct ReviewView: View {
                     Spacer()
                     CentsField(cents: $draft.tipCents).frame(width: 100)
                 }
-                totalRow("Total", draft.totalCents, bold: true)
+                if draft.effectiveAdjustmentCents != 0 {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Not itemized")
+                            Text("The part of the total the items above don't explain")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        CentsField(cents: Binding(
+                            get: { draft.effectiveAdjustmentCents },
+                            set: { draft.setAdjustment($0) }
+                        ))
+                        .frame(width: 100)
+                    }
+                }
+                HStack {
+                    Text("Total").fontWeight(.bold)
+                    Spacer()
+                    CentsField(cents: Binding(
+                        get: { draft.totalCents },
+                        set: { draft.setTotal($0) }
+                    ))
+                    .font(.body.bold())
+                    .frame(width: 110)
+                }
+            } header: {
+                Text("Totals")
+            } footer: {
+                Text("Tap the total to type it exactly as printed on your receipt. Anything the items don't account for is kept as \"Not itemized\".")
             }
 
             if draft.plan.isShared {
@@ -143,11 +179,19 @@ struct ReviewView: View {
                 }
             }
 
-            splitwiseSection
+            shareSummarySection
+            if Config.splitwiseEnabled { splitwiseSection }
 
             if draft.printedTotalCents > 0 {
                 Section {
                     Text("The receipt itself says: subtotal \(Money.format(draft.printedSubtotalCents, currency: draft.currency)), total \(Money.format(draft.printedTotalCents, currency: draft.currency)).")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            } else if draft.existing == nil, draft.receiptImage != nil {
+                // Scanned, but no total came back: say so, and where to fix it.
+                Section {
+                    Label("The receipt's total wasn't recognized. Type it in the Total field above.", systemImage: "info.circle")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -210,6 +254,22 @@ struct ReviewView: View {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // MARK: Sharing the result
+
+    /// A short message with what each person owes, to send from any app.
+    @ViewBuilder
+    private var shareSummarySection: some View {
+        if draft.plan.isShared, draft.plan.other != nil {
+            Section {
+                ShareLink(item: draft.shareSummary(ownerName: profile.firstName)) {
+                    Label("Share summary", systemImage: "square.and.arrow.up")
+                }
+            } footer: {
+                Text("Makes a short message with what each person owes and the items, to send in WhatsApp, Messages or email, or paste into Splitwise.")
             }
         }
     }

@@ -189,7 +189,13 @@ enum ExpenseMath {
     /// What each person owes for the whole receipt: their share of every item,
     /// plus tax and tip in proportion to how much of the items they carry.
     /// The totals always add up to subtotal + tax + tip exactly.
-    static func personTotals(plan: SplitPlan, lines: [LineInput], taxCents: Int, tipCents: Int) -> [PersonTotal] {
+    static func personTotals(
+        plan: SplitPlan,
+        lines: [LineInput],
+        taxCents: Int,
+        tipCents: Int,
+        adjustmentCents: Int = 0
+    ) -> [PersonTotal] {
         let order = plan.isShared ? plan.everyone : [Participant.me]
         var subtotals: [String: Int] = [:]
         for line in lines {
@@ -204,7 +210,9 @@ enum ExpenseMath {
             let fallback = Dictionary(uniqueKeysWithValues: plan.defaultSplit.map { ($0.personID, $0.basisPoints) })
             weights = order.map { fallback[$0.id] ?? 0 }
         }
-        let overhead = allocate(taxCents + tipCents, weights: weights)
+        // Tax, tip and any not-itemized adjustment are all shared in proportion
+        // to the items each person carries.
+        let overhead = allocate(taxCents + tipCents + adjustmentCents, weights: weights)
 
         return order.enumerated().map { index, person in
             PersonTotal(id: person.id, name: person.name, cents: (subtotals[person.id] ?? 0) + overhead[index])
@@ -220,6 +228,7 @@ enum ExpenseMath {
         lines: [LineInput],
         taxCents: Int,
         tipCents: Int,
+        adjustmentCents: Int = 0,
         receiptCategory: ExpenseCategory
     ) -> [ExpenseCategory: Int] {
         var mine: [Int] = []
@@ -229,7 +238,7 @@ enum ExpenseMath {
             mine.append(zip(split, shares).first { $0.0.personID == personID }?.1 ?? 0)
         }
 
-        let total = personTotals(plan: plan, lines: lines, taxCents: taxCents, tipCents: tipCents)
+        let total = personTotals(plan: plan, lines: lines, taxCents: taxCents, tipCents: tipCents, adjustmentCents: adjustmentCents)
             .first { $0.id == personID }?.cents ?? 0
         let overhead = total - mine.reduce(0, +)
 

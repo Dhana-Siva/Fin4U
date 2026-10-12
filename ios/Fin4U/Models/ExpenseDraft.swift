@@ -24,6 +24,12 @@ final class ExpenseDraft {
     var items: [DraftItem]
     var taxCents: Int
     var tipCents: Int
+    /// Not-itemized part of the total, kept when no total has been typed.
+    var adjustmentCents = 0
+    /// The total the user typed this session. While set, it is the truth and
+    /// the adjustment is whatever makes items + tax + tip reach it -- so as
+    /// items are corrected, the adjustment shrinks toward zero by itself.
+    private(set) var totalOverrideCents: Int?
     var notes: [String]
     var receiptImage: Data?
     var plan = SplitPlan()
@@ -123,13 +129,34 @@ final class ExpenseDraft {
             isSettled: expense.isSettled,
             existing: expense
         )
+        adjustmentCents = expense.adjustmentCents
     }
 
     // MARK: Derived totals -- always computed from the items, never stored
     // separately, so they can't drift out of sync with what's on screen.
 
     var subtotalCents: Int { items.reduce(0) { $0 + $1.cents } }
-    var totalCents: Int { subtotalCents + taxCents + tipCents }
+    /// What the items, tax and tip don't explain (positive or negative).
+    var effectiveAdjustmentCents: Int {
+        totalOverrideCents.map { $0 - (subtotalCents + taxCents + tipCents) } ?? adjustmentCents
+    }
+    var totalCents: Int { subtotalCents + taxCents + tipCents + effectiveAdjustmentCents }
+
+    /// The user typed the total as printed on the receipt.
+    func setTotal(_ cents: Int) { totalOverrideCents = cents }
+
+    /// The user edited the "not itemized" amount directly.
+    func setAdjustment(_ cents: Int) {
+        totalOverrideCents = nil
+        adjustmentCents = cents
+    }
+
+    /// One tap when the receipt's total was read correctly but the items weren't.
+    func useReceiptTotal() {
+        if printedTotalCents > 0 { totalOverrideCents = printedTotalCents }
+    }
+
+    var canUseReceiptTotal: Bool { printedTotalCents > 0 && totalCents != printedTotalCents }
 
     var checks: [String] {
         Reconciliation.checks(
@@ -137,6 +164,7 @@ final class ExpenseDraft {
             printedSubtotal: printedSubtotalCents,
             tax: taxCents,
             tip: tipCents,
+            adjustment: effectiveAdjustmentCents,
             printedTotal: printedTotalCents,
             currency: currency
         )
@@ -159,7 +187,7 @@ final class ExpenseDraft {
 
     /// Who owes what for the whole receipt, tax and tip included.
     var personTotals: [PersonTotal] {
-        ExpenseMath.personTotals(plan: plan, lines: lines, taxCents: taxCents, tipCents: tipCents)
+        ExpenseMath.personTotals(plan: plan, lines: lines, taxCents: taxCents, tipCents: tipCents, adjustmentCents: effectiveAdjustmentCents)
     }
 
     func split(for item: DraftItem) -> [ShareEntry] { plan.resolve(item.split) }
@@ -231,6 +259,7 @@ final class ExpenseDraft {
         expense.subtotalCents = subtotalCents
         expense.taxCents = taxCents
         expense.tipCents = tipCents
+        expense.adjustmentCents = effectiveAdjustmentCents
         expense.totalCents = totalCents
         expense.receiptImage = receiptImage
 

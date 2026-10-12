@@ -22,7 +22,7 @@ struct Fin4UApp: App {
             }
             .environment(profile)
             .environment(splitwise)
-            .task { await splitwise.refresh() }
+            .task { if Config.splitwiseEnabled { await splitwise.refresh() } }
         }
         .modelContainer(for: [Expense.self, ExpenseItem.self, Person.self])
     }

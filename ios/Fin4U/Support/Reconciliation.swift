@@ -12,6 +12,7 @@ enum Reconciliation {
         printedSubtotal: Int,
         tax: Int,
         tip: Int,
+        adjustment: Int = 0,
         printedTotal: Int,
         currency: String
     ) -> [String] {
@@ -24,8 +25,10 @@ enum Reconciliation {
         }
 
         // Without a printed subtotal, fall back to the items themselves.
-        let base = printedSubtotal > 0 ? printedSubtotal : itemsTotal
-        let expectedTotal = base + tax + tip
+        // If the user set the total themselves (an adjustment), what matters is
+        // the total they ended up with, so compare that, not the printed subtotal.
+        let base = adjustment != 0 ? itemsTotal : (printedSubtotal > 0 ? printedSubtotal : itemsTotal)
+        let expectedTotal = base + tax + tip + adjustment
         if printedTotal > 0, expectedTotal != printedTotal {
             problems.append(
                 "Subtotal + tax + tip is \(Money.format(expectedTotal, currency: currency)) but the receipt's total is \(Money.format(printedTotal, currency: currency))."

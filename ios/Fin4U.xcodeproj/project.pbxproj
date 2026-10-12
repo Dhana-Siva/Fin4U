@@ -37,6 +37,7 @@
 		A7E6BD753BA24073897F37D7 /* DisclosureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7055BD228928ADB675E5AE23 /* DisclosureView.swift */; };
 		ABA6CB4A5892745CAF09C217 /* Split.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AFCA25D93426682FFB85DB6 /* Split.swift */; };
 		AE0E76EFD1C67D34DDA68FFA /* ImagePrep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCF35ACA0B27A295A750E50 /* ImagePrep.swift */; };
+		B61E006E90EB7EDA35E29544 /* ShareSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952B584C4763233B785A8172 /* ShareSummary.swift */; };
 		C9F52E139ABDD76A8FCC4A0E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */; };
 		CD94226D28FC7791B229F95F /* ExpenseDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B22E27C540F4805644321EF /* ExpenseDraft.swift */; };
 		CE248BC55EB3F3E1A46AFBC4 /* ScanFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE447D02068977EF8FD8320 /* ScanFlowView.swift */; };
@@ -84,6 +85,7 @@
 		7FCF35ACA0B27A295A750E50 /* ImagePrep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePrep.swift; sourceTree = "<group>"; };
 		89814D7083EE7A8DF906C375 /* Person.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Person.swift; sourceTree = "<group>"; };
 		92D32EAC5138C9EC39FB66B3 /* DocumentScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerView.swift; sourceTree = "<group>"; };
+		952B584C4763233B785A8172 /* ShareSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSummary.swift; sourceTree = "<group>"; };
 		9E85C7259B1E1B2A65FFB934 /* Fin4UApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fin4UApp.swift; sourceTree = "<group>"; };
 		A06EFD798F456185AD51D5FF /* SpendStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendStats.swift; sourceTree = "<group>"; };
 		A48539162767344AA518D610 /* FriendPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendPickerView.swift; sourceTree = "<group>"; };
@@ -101,7 +103,7 @@
 		F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_6454B8E9-5511-4C3F-97C2-EAD14C1C1E99" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_71806FA3-0797-4467-9EED-7C2627CD815A" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -216,6 +218,7 @@
 				6868B7878A1FB8E79E68EAE7 /* Keychain.swift */,
 				F874F03D569B7AB187302A1D /* Money.swift */,
 				115D8796BEAC28563252884A /* Reconciliation.swift */,
+				952B584C4763233B785A8172 /* ShareSummary.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -281,10 +284,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_9B6BAA0B-50D2-47AD-8189-AD5A5474C629" /* ios */ = {
+		"TEMP_0D2C6BC4-31DF-4D1F-B2DF-4971829734C9" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_6454B8E9-5511-4C3F-97C2-EAD14C1C1E99" /* Secrets.xcconfig */,
+				"TEMP_71806FA3-0797-4467-9EED-7C2627CD815A" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -416,6 +419,7 @@
 				74320BB82A583018E2CB2138 /* Reconciliation.swift in Sources */,
 				9EC72537E0B8679AD13E3AA1 /* ReviewView.swift in Sources */,
 				CE248BC55EB3F3E1A46AFBC4 /* ScanFlowView.swift in Sources */,
+				B61E006E90EB7EDA35E29544 /* ShareSummary.swift in Sources */,
 				69ABCD4B91035B3230E623C4 /* SpendStats.swift in Sources */,
 				ABA6CB4A5892745CAF09C217 /* Split.swift in Sources */,
 				9A369CB5D09EF26AF48207AF /* SplitwiseAPI.swift in Sources */,
@@ -480,7 +484,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_6454B8E9-5511-4C3F-97C2-EAD14C1C1E99" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_71806FA3-0797-4467-9EED-7C2627CD815A" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -544,7 +548,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_6454B8E9-5511-4C3F-97C2-EAD14C1C1E99" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_71806FA3-0797-4467-9EED-7C2627CD815A" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

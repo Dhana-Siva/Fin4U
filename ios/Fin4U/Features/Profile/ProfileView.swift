@@ -79,7 +79,7 @@ struct ProfileView: View {
                     Text("Used for the greeting on your dashboard. Your name and photo stay on this phone; they're never sent anywhere.")
                 }
 
-                splitwiseSection
+                if Config.splitwiseEnabled { splitwiseSection }
             }
             .navigationTitle("Profile")
             .task(id: splitwise.isConnected) { await loadGroups() }

@@ -1196,3 +1196,186 @@ final class SplitwisePosterTests: XCTestCase {
         XCTAssertEqual(try c.mainContext.fetch(FetchDescriptor<Expense>()).count, 1)
     }
 }
+
+@MainActor
+final class ManualTotalTests: XCTestCase {
+    private func scanned(printedTotal: Int = 0) -> ExpenseDraft {
+        ExpenseDraft(
+            merchant: "Cafe",
+            items: [
+                DraftItem(name: "Latte", quantity: 1, cents: 900, category: .dining),
+                DraftItem(name: "Bagel", quantity: 1, cents: 350, category: .dining),
+            ],
+            taxCents: 100, tipCents: 200,
+            receiptImage: Data([1]),
+            printedSubtotalCents: printedTotal > 0 ? 1250 : 0,
+            printedTotalCents: printedTotal
+        )
+    }
+
+    private func container() throws -> ModelContainer {
+        try ModelContainer(
+            for: Expense.self, ExpenseItem.self, Person.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    func testWithoutATypedTotalNothingChanges() {
+        let d = scanned()
+        XCTAssertEqual(d.effectiveAdjustmentCents, 0)
+        XCTAssertEqual(d.totalCents, 1250 + 100 + 200)
+    }
+
+    func testTypingATotalKeepsTheItemsAndRecordsTheDifference() {
+        let d = scanned()
+        d.setTotal(1750)  // the receipt says $17.50
+        XCTAssertEqual(d.totalCents, 1750)
+        XCTAssertEqual(d.subtotalCents, 1250)  // items untouched
+        XCTAssertEqual(d.effectiveAdjustmentCents, 200)  // 1750 - (1250 + 100 + 200)
+    }
+
+    func testTheAdjustmentShrinksAsItemsAreCorrected() {
+        let d = scanned()
+        d.setTotal(1750)
+        d.items[1].cents = 550  // fixing the misread bagel price
+        XCTAssertEqual(d.totalCents, 1750)  // the typed total stays put
+        XCTAssertEqual(d.effectiveAdjustmentCents, 0)  // nothing left unexplained
+    }
+
+    func testEditingTheNotItemizedAmountDirectlyMovesTheTotal() {
+        let d = scanned()
+        d.setTotal(1750)
+        d.setAdjustment(-50)
+        XCTAssertEqual(d.totalCents, 1250 + 100 + 200 - 50)
+        d.items[0].cents = 1000  // now the total follows the items again
+        XCTAssertEqual(d.totalCents, 1350 + 100 + 200 - 50)
+    }
+
+    func testOneTapUsesTheReceiptsPrintedTotal() {
+        let d = scanned(printedTotal: 1600)  // items + tax + tip = 1550: off by 50
+        XCTAssertTrue(d.canUseReceiptTotal)
+        XCTAssertFalse(d.checks.isEmpty)
+        d.useReceiptTotal()
+        XCTAssertEqual(d.totalCents, 1600)
+        XCTAssertFalse(d.canUseReceiptTotal)
+        XCTAssertTrue(d.checks.filter { $0.contains("total") }.isEmpty)  // the total warning clears
+    }
+
+    func testNoPrintedTotalMeansNothingToOffer() {
+        let d = scanned(printedTotal: 0)
+        XCTAssertFalse(d.canUseReceiptTotal)
+        d.useReceiptTotal()
+        XCTAssertEqual(d.totalCents, 1550)  // unchanged
+    }
+
+    func testAdjustmentIsSharedOutLikeTaxAndEveryonesPartsAddUpToTheTotal() {
+        let sam = Participant(id: "sam", name: "Sam")
+        let d = scanned()
+        d.plan.isShared = true
+        d.plan.selectOnly(sam)
+        d.setItemize(true)
+        d.setItemShared(true, of: d.items[0].id)  // only the latte is split
+        d.setTotal(1801)  // 251 not itemized
+        let totals = d.personTotals
+        XCTAssertEqual(totals.reduce(0) { $0 + $1.cents }, 1801)
+        // Sam carries part of the latte only, so part of the overhead too -- never more than half the latte share.
+        XCTAssertGreaterThan(totals.first { $0.id == "sam" }!.cents, 450)
+    }
+
+    func testANegativeAdjustmentWorksToo() {
+        let d = scanned()
+        d.setTotal(1000)  // less than the items (an unlisted discount)
+        XCTAssertEqual(d.effectiveAdjustmentCents, 1000 - 1550)
+        XCTAssertEqual(d.totalCents, 1000)
+    }
+
+    func testTheAdjustmentIsSavedAndReopens() throws {
+        let c = try container()
+        let d = scanned()
+        d.setTotal(1750)
+        let expense = d.save(in: c.mainContext)
+        XCTAssertEqual(expense.totalCents, 1750)
+        XCTAssertEqual(expense.adjustmentCents, 200)
+
+        let reopened = ExpenseDraft(expense: expense)
+        XCTAssertEqual(reopened.totalCents, 1750)
+        XCTAssertEqual(reopened.effectiveAdjustmentCents, 200)
+        withExtendedLifetime(c) {}
+    }
+
+    func testCategoryTotalsStillAddUpToYourTotalWithAnAdjustment() throws {
+        let c = try container()
+        let d = ExpenseDraft(items: [
+            DraftItem(name: "Milk", quantity: 1, cents: 3000, category: .groceries),
+            DraftItem(name: "Vitamins", quantity: 1, cents: 1000, category: .health),
+        ], taxCents: 400)
+        d.setTotal(4700)  // 300 not itemized
+        let expense = d.save(in: c.mainContext)
+        XCTAssertEqual(expense.myCategoryTotals.values.reduce(0, +), 4700)
+        XCTAssertEqual(expense.myTotalCents, 4700)
+        withExtendedLifetime(c) {}
+    }
+}
+
+@MainActor
+final class ShareSummaryTests: XCTestCase {
+    private func sharedDraft() -> ExpenseDraft {
+        let sam = Participant(id: "sam", name: "Sam")
+        let d = ExpenseDraft(
+            merchant: "Thai Garden",
+            date: Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 2, hour: 12))!,
+            items: [
+                DraftItem(name: "Pad Thai", quantity: 1, cents: 2400, category: .dining),
+                DraftItem(name: "My salad", quantity: 1, cents: 1000, category: .dining),
+            ],
+            taxCents: 340
+        )
+        d.plan.isShared = true
+        d.plan.selectOnly(sam)
+        d.setItemize(true)
+        d.setItemShared(true, of: d.items[0].id)  // pad thai 50/50; salad is mine
+        return d
+    }
+
+    func testTheMessageSaysWhoPaidWhoOwesAndHowItWasSplit() {
+        let text = sharedDraft().shareSummary(ownerName: "Dhana")
+        XCTAssertTrue(text.hasPrefix("Thai Garden - Oct 2, 2026\nDhana paid $37.40 for this receipt."))
+        // Sam carries half the pad thai ($12.00) plus 12/34 of the tax: 340 * 1200/3400 = 120.
+        XCTAssertTrue(text.contains("Sam owes Dhana $13.20."))
+        XCTAssertTrue(text.contains("Pad Thai $24.00  ->  Dhana $12.00 / Sam $12.00"))
+        XCTAssertTrue(text.contains("My salad $10.00  ->  Dhana $10.00"))  // Sam's zero share is left out
+        XCTAssertFalse(text.contains("Sam $0.00"))
+        XCTAssertTrue(text.contains("Tax $3.40"))
+        XCTAssertTrue(text.hasSuffix("Sent from Fin4U"))
+    }
+
+    func testWithoutAProfileNameItReadsInTheFirstPerson() {
+        let text = sharedDraft().shareSummary(ownerName: "  ")
+        XCTAssertTrue(text.contains("I paid $37.40 for this receipt."))
+        XCTAssertTrue(text.contains("Sam owes me $13.20."))
+        XCTAssertTrue(text.contains("Pad Thai $24.00  ->  Me $12.00 / Sam $12.00"))
+    }
+
+    func testANotItemizedAmountIsListedAndExplained() {
+        let d = sharedDraft()
+        d.setTotal(3900)  // 160 not itemized
+        let text = d.shareSummary(ownerName: "Dhana")
+        XCTAssertTrue(text.contains("Dhana paid $39.00"))
+        XCTAssertTrue(text.contains("Not itemized $1.60"))
+        XCTAssertTrue(text.contains("anything not itemized are shared in proportion"))
+    }
+
+    func testTheOwedAmountsInTheMessageMatchTheScreensTotals() {
+        let d = sharedDraft()
+        let sam = d.personTotals.first { $0.id == "sam" }!.cents
+        XCTAssertTrue(d.shareSummary(ownerName: "Dhana").contains("Sam owes Dhana \(Money.format(sam, currency: "USD"))."))
+    }
+
+    func testNothingToSettleWhenNobodyOwesAnything() {
+        let d = sharedDraft()
+        d.setItemShared(false, of: d.items[0].id)  // nothing is shared any more
+        let text = d.shareSummary(ownerName: "Dhana")
+        XCTAssertTrue(text.contains("Nothing to settle."))
+        XCTAssertFalse(text.contains("owes"))
+    }
+}
