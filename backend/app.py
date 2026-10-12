@@ -13,13 +13,15 @@ Amounts are integer cents everywhere. Floating-point dollars drift (0.1 +
 exactly, so money never touches a float.
 """
 import base64
-import hmac
 import logging
 import os
 
 import anthropic
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile
 from pydantic import BaseModel
+
+from security import require_app_key
+from splitwise_oauth import router as splitwise_router
 
 log = logging.getLogger("receipt-backend")
 
@@ -233,6 +235,9 @@ app = FastAPI(
 )
 
 
+app.include_router(splitwise_router)
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -247,11 +252,7 @@ def parse_receipt(
     # no configured key means nothing is served. A key shipped inside an
     # app is deterrence, not real security (App Attest / per-device
     # tokens are the proper upgrade) -- but it stops casual abuse.
-    expected_key = os.environ.get("APP_API_KEY")
-    if not expected_key:
-        raise HTTPException(status_code=503, detail="Server is not configured.")
-    if not x_app_key or not hmac.compare_digest(x_app_key, expected_key):
-        raise HTTPException(status_code=401, detail="Unauthorized.")
+    require_app_key(x_app_key)
 
     data = image.file.read(MAX_IMAGE_BYTES + 1)
     if len(data) > MAX_IMAGE_BYTES:

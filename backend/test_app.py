@@ -224,3 +224,127 @@ def test_api_docs_are_not_published_by_default(client):
     assert client.get("/docs").status_code == 404
     assert client.get("/openapi.json").status_code == 404
     assert client.get("/health").status_code == 200
+
+
+# ---- Sign in with Splitwise -------------------------------------------------
+import re as _re
+from urllib.parse import parse_qs, urlparse
+
+import splitwise_oauth
+
+STATE = "abcdEFGH1234_-xyz0987"
+
+
+@pytest.fixture
+def sw(monkeypatch):
+    monkeypatch.setenv("SPLITWISE_CLIENT_ID", "client-id-123")
+    monkeypatch.setenv("SPLITWISE_CLIENT_SECRET", "client-secret-456")
+    monkeypatch.setenv("PUBLIC_BASE_URL", "https://fin4u.example.com")
+    splitwise_oauth._pending.clear()
+    return None
+
+
+def no_follow(client):
+    return client  # TestClient: use follow_redirects=False per call
+
+
+def test_authorize_redirects_to_splitwise_with_our_callback(client, sw):
+    r = client.get("/splitwise/authorize", params={"state": STATE}, follow_redirects=False)
+    assert r.status_code == 302
+    target = urlparse(r.headers["location"])
+    assert target.netloc == "www.splitwise.com" and target.path == "/oauth/authorize"
+    q = parse_qs(target.query)
+    assert q["client_id"] == ["client-id-123"]
+    assert q["response_type"] == ["code"]
+    assert q["state"] == [STATE]
+    assert q["redirect_uri"] == ["https://fin4u.example.com/splitwise/callback"]
+    assert "client-secret-456" not in r.headers["location"]  # the secret never leaves the server
+
+
+def test_authorize_rejects_a_weak_or_malformed_state(client, sw):
+    assert client.get("/splitwise/authorize", params={"state": "short"}, follow_redirects=False).status_code == 400
+    assert client.get("/splitwise/authorize", params={"state": "has spaces and !!! chars"}, follow_redirects=False).status_code == 400
+
+
+def test_authorize_is_503_until_splitwise_is_configured(client, monkeypatch):
+    monkeypatch.delenv("SPLITWISE_CLIENT_ID", raising=False)
+    monkeypatch.delenv("SPLITWISE_CLIENT_SECRET", raising=False)
+    assert client.get("/splitwise/authorize", params={"state": STATE}, follow_redirects=False).status_code == 503
+
+
+def test_callback_hands_the_app_a_one_time_code_not_the_token(client, sw, monkeypatch):
+    monkeypatch.setattr(splitwise_oauth, "exchange_code", lambda code: "TOKEN-for-" + code)
+    r = client.get("/splitwise/callback", params={"code": "abc", "state": STATE}, follow_redirects=False)
+    assert r.status_code == 302
+    location = r.headers["location"]
+    assert location.startswith("fin4u://splitwise?")
+    assert "TOKEN-for-abc" not in location  # the token itself never travels in a URL
+    q = parse_qs(urlparse(location).query)
+    assert q["state"] == [STATE]
+    handoff = q["handoff"][0]
+
+    # The app collects the token once, with the app key...
+    ok = client.post("/splitwise/token", json={"handoff": handoff}, headers={"X-App-Key": KEY})
+    assert ok.status_code == 200 and ok.json() == {"access_token": "TOKEN-for-abc"}
+    # ...and the code is single-use.
+    again = client.post("/splitwise/token", json={"handoff": handoff}, headers={"X-App-Key": KEY})
+    assert again.status_code == 404
+
+
+def test_token_endpoint_requires_the_app_key(client, sw, monkeypatch):
+    monkeypatch.setattr(splitwise_oauth, "exchange_code", lambda code: "T")
+    q = parse_qs(urlparse(client.get("/splitwise/callback", params={"code": "c", "state": STATE},
+                                     follow_redirects=False).headers["location"]).query)
+    handoff = q["handoff"][0]
+    assert client.post("/splitwise/token", json={"handoff": handoff}).status_code == 401
+    assert client.post("/splitwise/token", json={"handoff": handoff}, headers={"X-App-Key": "wrong"}).status_code == 401
+    # A rejected attempt must not burn the code.
+    assert client.post("/splitwise/token", json={"handoff": handoff}, headers={"X-App-Key": KEY}).status_code == 200
+
+
+def test_an_expired_handoff_is_refused(client, sw, monkeypatch):
+    monkeypatch.setattr(splitwise_oauth, "exchange_code", lambda code: "T")
+    q = parse_qs(urlparse(client.get("/splitwise/callback", params={"code": "c", "state": STATE},
+                                     follow_redirects=False).headers["location"]).query)
+    handoff = q["handoff"][0]
+    token, _ = splitwise_oauth._pending[handoff]
+    splitwise_oauth._pending[handoff] = (token, 0.0)  # long expired
+    assert client.post("/splitwise/token", json={"handoff": handoff}, headers={"X-App-Key": KEY}).status_code == 404
+
+
+def test_denied_sign_in_goes_back_to_the_app_with_an_error(client, sw):
+    r = client.get("/splitwise/callback", params={"error": "access_denied", "state": STATE}, follow_redirects=False)
+    q = parse_qs(urlparse(r.headers["location"]).query)
+    assert q["error"] == ["access_denied"] and q["state"] == [STATE]
+    assert "handoff" not in q
+
+
+def test_a_failed_token_exchange_is_reported_without_leaking_details(client, sw, monkeypatch):
+    def boom(code):
+        raise RuntimeError("secret=client-secret-456 code=" + code)
+    monkeypatch.setattr(splitwise_oauth, "exchange_code", boom)
+    r = client.get("/splitwise/callback", params={"code": "zzz", "state": STATE}, follow_redirects=False)
+    assert r.status_code == 302
+    assert parse_qs(urlparse(r.headers["location"]).query)["error"] == ["exchange_failed"]
+    assert "client-secret-456" not in r.headers["location"]
+
+
+def test_the_token_exchange_sends_the_secret_to_splitwise_and_nowhere_else(sw, monkeypatch):
+    seen = {}
+
+    class FakeResponse:
+        def raise_for_status(self): pass
+        def json(self): return {"access_token": "real-token", "token_type": "bearer"}
+
+    def fake_post(url, data=None, timeout=None):
+        seen["url"], seen["data"] = url, data
+        return FakeResponse()
+
+    monkeypatch.setattr(splitwise_oauth.httpx, "post", fake_post)
+    assert splitwise_oauth.exchange_code("the-code") == "real-token"
+    assert seen["url"] == "https://www.splitwise.com/oauth/token"
+    assert seen["data"] == {
+        "client_id": "client-id-123", "client_secret": "client-secret-456",
+        "grant_type": "authorization_code", "code": "the-code",
+        "redirect_uri": "https://fin4u.example.com/splitwise/callback",
+    }
