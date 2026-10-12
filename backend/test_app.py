@@ -207,15 +207,17 @@ def test_item_without_a_category_still_parses(client, monkeypatch):
 
 
 def test_missing_anthropic_key_is_a_clean_503_not_a_crash(client, monkeypatch):
-    import anthropic
-
-    def no_key():
-        raise anthropic.AnthropicError("The api_key client option must be set")
-
-    monkeypatch.setattr(backend, "get_client", no_key)
+    # No fake client here: the real get_client() runs and must refuse up front
+    # (the SDK itself would only fail later, with a bare TypeError).
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     response = post(client)
     assert response.status_code == 503
     assert response.json()["detail"] == "Server is not configured."
+
+
+def test_get_client_builds_a_client_when_the_key_is_set(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    assert backend.get_client() is not None
 
 
 def test_api_docs_are_not_published_by_default(client):

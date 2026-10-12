@@ -45,6 +45,10 @@ class ReceiptParseError(Exception):
     """The model answered, but not with a usable receipt."""
 
 
+class ServerNotConfigured(Exception):
+    """This server has no Anthropic API key, so it can't read anything."""
+
+
 SYSTEM_PROMPT = """You extract structured data from photos of purchase receipts (restaurants, groceries, retail, pharmacies).
 
 Rules:
@@ -172,7 +176,10 @@ def sniff_media_type(data: bytes) -> str | None:
 
 
 def get_client() -> anthropic.Anthropic:
-    # Resolves credentials from the environment (ANTHROPIC_API_KEY, etc.).
+    # Checked here, up front: left alone, the SDK only fails later, at request
+    # time, with a bare TypeError.
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        raise ServerNotConfigured()
     return anthropic.Anthropic()
 
 
@@ -266,10 +273,8 @@ def parse_receipt(
         # Class name only: exception text can echo request details.
         log.error("Anthropic call failed (%s)", type(exc).__name__)
         raise HTTPException(status_code=502, detail="Couldn't reach the receipt reader. Try again.") from exc
-    except anthropic.AnthropicError as exc:
-        # Not an API failure: the client couldn't even be built, i.e. no
-        # ANTHROPIC_API_KEY on this server.
-        log.error("Anthropic client is not configured (%s)", type(exc).__name__)
+    except ServerNotConfigured as exc:
+        log.error("ANTHROPIC_API_KEY is not set on this server")
         raise HTTPException(status_code=503, detail="Server is not configured.") from exc
 
     if not parsed.is_receipt:
