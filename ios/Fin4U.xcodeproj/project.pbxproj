@@ -83,7 +83,7 @@
 		F257BDCB759A75AFCFFCB693 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_C13D918D-AA45-461C-8AD4-E8F969EE83CD" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_F35BD56F-4025-483E-B203-E8856D4249BA" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -238,10 +238,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_7DF6158B-C446-49CD-AF63-7F7232A2EB30" /* ios */ = {
+		"TEMP_AA11AD04-83EF-4988-AE7E-5DB471D9DBDC" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_C13D918D-AA45-461C-8AD4-E8F969EE83CD" /* Secrets.xcconfig */,
+				"TEMP_F35BD56F-4025-483E-B203-E8856D4249BA" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -428,7 +428,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_C13D918D-AA45-461C-8AD4-E8F969EE83CD" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_F35BD56F-4025-483E-B203-E8856D4249BA" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -492,7 +492,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_C13D918D-AA45-461C-8AD4-E8F969EE83CD" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_F35BD56F-4025-483E-B203-E8856D4249BA" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

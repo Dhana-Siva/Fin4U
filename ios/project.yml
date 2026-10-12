@@ -45,14 +45,11 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         BackendBaseURL: "$(BACKEND_BASE_URL)"
         AppKey: "$(APP_KEY)"
-        # Lets Debug builds talk to the mock server on localhost over plain
-        # HTTP. TODO before App Store submission: remove -- Release should
-        # only ever use the HTTPS backend.
-        NSAppTransportSecurity:
-          NSAllowsLocalNetworking: true
-        # Debug only in spirit: lets a test build reach a dev backend on the
-        # Mac over Wi-Fi. Remove with NSAllowsLocalNetworking for release.
-        NSLocalNetworkUsageDescription: Fin4U connects to the receipt-reading server running on your computer during testing.
+        # No App Transport Security exceptions: the app only ever talks to the
+        # HTTPS backend. (To test against a local dev server over plain HTTP,
+        # temporarily add NSAppTransportSecurity > NSAllowsLocalNetworking and,
+        # for a real phone, NSLocalNetworkUsageDescription -- and remove them
+        # again before shipping.)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dhana.fin4u

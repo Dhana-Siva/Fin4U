@@ -26,15 +26,8 @@
 	<string>1</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Fin4U uses the camera to scan your receipts.</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Fin4U connects to the receipt-reading server running on your computer during testing.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
