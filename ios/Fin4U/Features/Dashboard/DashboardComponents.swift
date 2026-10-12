@@ -5,6 +5,7 @@ import SwiftUI
 enum DashboardRoute: Hashable {
     case month(Date)  // first day of the month
     case day(Date)    // start of the day
+    case owed         // everything others still owe
 }
 
 /// A period's headline total plus the same breakdown by category.
@@ -15,6 +16,7 @@ struct PeriodCard: View {
     var showCategories = true
 
     var body: some View {
+        let owed = SpendStats.totalOwed(spends, currency: currency)
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.subheadline)
@@ -30,8 +32,45 @@ struct PeriodCard: View {
                     .foregroundStyle(.secondary)
             }
 
+            if owed > 0 {
+                Label("Owed to you: \(Money.format(owed, currency: currency))", systemImage: "arrow.down.left.circle.fill")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(Color.accentColor)
+            }
+
             if showCategories {
                 CategoryBars(totals: SpendStats.categoryTotals(spends, currency: currency), currency: currency)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// What other people still owe, in total and per person.
+struct OwedCard: View {
+    let spends: [Spend]
+    let currency: String
+
+    var body: some View {
+        let people = SpendStats.owed(spends, currency: currency)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Owed to you")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Text(Money.format(people.reduce(0) { $0 + $1.cents }, currency: currency))
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(Color.accentColor)
+
+            ForEach(people) { person in
+                HStack {
+                    Text(person.name).font(.body)
+                    Spacer()
+                    Text(Money.format(person.cents, currency: currency))
+                        .font(.body.weight(.medium))
+                        .monospacedDigit()
+                }
             }
         }
         .padding(.vertical, 4)

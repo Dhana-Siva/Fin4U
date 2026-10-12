@@ -7,11 +7,13 @@ struct Spend: Equatable {
     var currency: String
     var cents: Int
     var categories: [ExpenseCategory: Int]
+    /// What others still owe the owner for this expense.
+    var owed: [PersonTotal] = []
 }
 
 extension Expense {
     var spend: Spend {
-        Spend(date: date, currency: currency, cents: myTotalCents, categories: myCategoryTotals)
+        Spend(date: date, currency: currency, cents: myTotalCents, categories: myCategoryTotals, owed: owedToMe)
     }
 }
 
@@ -42,6 +44,21 @@ enum SpendStats {
         Dictionary(grouping: spends.filter { $0.currency != currency }, by: \.currency)
             .map { (currency: $0.key, cents: $0.value.reduce(0) { $0 + $1.cents }) }
             .sorted { $0.cents > $1.cents }
+    }
+
+    /// What each person owes in `currency`, biggest debt first.
+    static func owed(_ spends: [Spend], currency: String) -> [PersonTotal] {
+        var byPerson: [String: PersonTotal] = [:]
+        for spend in spends where spend.currency == currency {
+            for entry in spend.owed {
+                byPerson[entry.id, default: PersonTotal(id: entry.id, name: entry.name, cents: 0)].cents += entry.cents
+            }
+        }
+        return byPerson.values.sorted { $0.cents != $1.cents ? $0.cents > $1.cents : $0.name < $1.name }
+    }
+
+    static func totalOwed(_ spends: [Spend], currency: String) -> Int {
+        owed(spends, currency: currency).reduce(0) { $0 + $1.cents }
     }
 
     static func categoryTotals(_ spends: [Spend], currency: String) -> [(category: ExpenseCategory, cents: Int)] {

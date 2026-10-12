@@ -27,6 +27,7 @@ final class ExpenseDraft {
     var notes: [String]
     var receiptImage: Data?
     var plan = SplitPlan()
+    var isSettled = false
 
     /// What the receipt itself printed -- kept only to cross-check the items
     /// as the user edits. Zero means "not shown", and for an already-saved
@@ -50,6 +51,7 @@ final class ExpenseDraft {
         printedSubtotalCents: Int = 0,
         printedTotalCents: Int = 0,
         plan: SplitPlan = SplitPlan(),
+        isSettled: Bool = false,
         existing: Expense? = nil
     ) {
         self.merchant = merchant
@@ -64,6 +66,7 @@ final class ExpenseDraft {
         self.printedSubtotalCents = printedSubtotalCents
         self.printedTotalCents = printedTotalCents
         self.plan = plan
+        self.isSettled = isSettled
         self.existing = existing
     }
 
@@ -111,6 +114,7 @@ final class ExpenseDraft {
             tipCents: expense.tipCents,
             receiptImage: expense.receiptImage,
             plan: expense.splitPlan,
+            isSettled: expense.isSettled,
             existing: expense
         )
     }
@@ -225,6 +229,7 @@ final class ExpenseDraft {
         // Splits are only stored for shared expenses; turning sharing off
         // means everything is yours again, so no stale splits are kept.
         expense.isShared = plan.isShared
+        expense.isSettled = plan.isShared && plan.other != nil && isSettled
         expense.splitData = plan.isShared
             ? try? JSONEncoder().encode(SplitSnapshot(participants: plan.participants, defaultSplit: plan.customDefault, itemize: plan.itemize))
             : nil

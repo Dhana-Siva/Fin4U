@@ -250,6 +250,8 @@ struct ReviewView: View {
                             set: { draft.setDefaultOtherShare($0) }
                         ))
                     }
+
+                    Toggle("\(other.name) has paid me back", isOn: $draft.isSettled)
                 }
             }
         } footer: {

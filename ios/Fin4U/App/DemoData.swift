@@ -17,7 +17,7 @@ enum DemoData {
             calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12)) ?? Date()
         }
         func add(_ merchant: String, _ date: Date, _ category: ExpenseCategory, _ items: [(String, Int, ExpenseCategory)],
-                 tax: Int = 0, shared: Bool = false) {
+                 tax: Int = 0, shared: Bool = false, settled: Bool = false) {
             let subtotal = items.reduce(0) { $0 + $1.1 }
             let expense = Expense(
                 merchant: merchant, date: date, currency: "USD", category: category,
@@ -30,6 +30,7 @@ enum DemoData {
             if shared {
                 let sam = Participant(id: "demo-sam", name: "Sam")
                 expense.isShared = true
+                expense.isSettled = settled
                 expense.splitData = try? JSONEncoder().encode(SplitSnapshot(participants: [sam], defaultSplit: nil, itemize: nil))
             }
         }
@@ -49,7 +50,7 @@ enum DemoData {
         // The current month: several receipts across a few days.
         let d1 = 2
         add("Shoprite", day(year, month, d1), .groceries,
-            [("Milk", 429, .groceries), ("Bread", 599, .groceries), ("Ibuprofen", 899, .health)], tax: 120, shared: true)
+            [("Milk", 429, .groceries), ("Bread", 599, .groceries), ("Ibuprofen", 899, .health)], tax: 120, shared: true, settled: true)
         add("Thai Garden", day(year, month, d1), .dining, [("Dinner", 5400, .dining)], tax: 480, shared: true)
         add("Pharmacy", day(year, month, d1 + 3), .health, [("Cold medicine", 1299, .health)], tax: 90)
         add("Green Valley Market", day(year, month, d1 + 6), .groceries,

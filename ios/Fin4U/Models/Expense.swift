@@ -22,6 +22,8 @@ final class Expense {
     var items: [ExpenseItem] = []
     /// Defaults are required so stores saved before sharing existed migrate.
     var isShared: Bool = false
+    /// The other person has paid their share back, so it's no longer owed.
+    var isSettled: Bool = false
     /// JSON `SplitSnapshot` (who it's shared with + any hand-edited default).
     var splitData: Data?
 
@@ -120,6 +122,13 @@ extension Expense {
 
     var personTotals: [PersonTotal] {
         ExpenseMath.personTotals(plan: splitPlan, lines: lines, taxCents: taxCents, tipCents: tipCents)
+    }
+
+    /// What other people still owe the owner for this expense. The owner is
+    /// assumed to have paid the whole bill; nothing is owed once it's settled.
+    var owedToMe: [PersonTotal] {
+        guard isShared, !isSettled else { return [] }
+        return personTotals.filter { $0.id != Participant.me.id && $0.cents > 0 }
     }
 
     /// The owner's own share -- equal to `totalCents` unless it's shared.

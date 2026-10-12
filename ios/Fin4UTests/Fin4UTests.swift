@@ -1,5 +1,6 @@
 import XCTest
 import UIKit
+import SwiftData
 @testable import Fin4U
 
 final class MoneyTests: XCTestCase {
@@ -619,5 +620,100 @@ final class SpendStatsTests: XCTestCase {
         XCTAssertEqual(SpendStats.primaryCurrency([]), "USD")
         XCTAssertEqual(SpendStats.total([], currency: "USD"), 0)
         XCTAssertTrue(SpendStats.dailyTotals([], currency: "USD", calendar: calendar).isEmpty)
+    }
+}
+
+final class OwedTests: XCTestCase {
+    private let sam = Participant(id: "sam", name: "Sam")
+
+    private func owed(_ id: String, _ name: String, _ cents: Int) -> PersonTotal { PersonTotal(id: id, name: name, cents: cents) }
+
+    private func spend(_ cents: Int, owed: [PersonTotal], currency: String = "USD") -> Spend {
+        Spend(date: Date(), currency: currency, cents: cents, categories: [:], owed: owed)
+    }
+
+    func testOwedAddsUpPerPersonAcrossExpenses() {
+        let spends = [
+            spend(500, owed: [owed("sam", "Sam", 500)]),
+            spend(800, owed: [owed("sam", "Sam", 300), owed("daya", "Daya", 900)]),
+            spend(100, owed: []),
+        ]
+        let totals = SpendStats.owed(spends, currency: "USD")
+        XCTAssertEqual(totals.map(\.name), ["Daya", "Sam"])
+        XCTAssertEqual(totals.map(\.cents), [900, 800])
+        XCTAssertEqual(SpendStats.totalOwed(spends, currency: "USD"), 1700)
+    }
+
+    func testOwedInOtherCurrenciesIsNotMixedIn() {
+        let spends = [spend(500, owed: [owed("sam", "Sam", 500)]), spend(500, owed: [owed("sam", "Sam", 9000)], currency: "INR")]
+        XCTAssertEqual(SpendStats.totalOwed(spends, currency: "USD"), 500)
+    }
+
+    /// The container is returned too: a model object is only usable while its
+    /// container is alive.
+    @MainActor
+    private func savedExpense(settled: Bool) throws -> (container: ModelContainer, expense: Expense) {
+        let container = try ModelContainer(
+            for: Expense.self, ExpenseItem.self, Person.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+        let draft = ExpenseDraft(
+            merchant: "Thai Garden",
+            items: [DraftItem(name: "Dinner", quantity: 1, cents: 5000, category: .dining)],
+            taxCents: 500
+        )
+        draft.plan.isShared = true
+        draft.plan.selectOnly(sam)
+        draft.isSettled = settled
+        draft.save(in: context)
+        try context.save()
+        return (container, try context.fetch(FetchDescriptor<Expense>()).first!)
+    }
+
+    @MainActor
+    func testWhatOthersOweIsTheirShareWithTaxIncluded() throws {
+        let (container, expense) = try savedExpense(settled: false)
+        withExtendedLifetime(container) {
+            XCTAssertEqual(expense.owedToMe.map(\.cents), [2750])  // half of $55.00
+            XCTAssertEqual(expense.myTotalCents, 2750)
+        }
+    }
+
+    @MainActor
+    func testSettledExpensesAreNoLongerOwedAndStaySettledWhenReopened() throws {
+        let (container, expense) = try savedExpense(settled: true)
+        withExtendedLifetime(container) {
+            XCTAssertTrue(expense.owedToMe.isEmpty)
+            XCTAssertTrue(ExpenseDraft(expense: expense).isSettled)
+            XCTAssertEqual(expense.myTotalCents, 2750)  // your own share is unaffected
+        }
+    }
+
+    @MainActor
+    func testUnsharedExpensesOweNothing() throws {
+        let container = try ModelContainer(
+            for: Expense.self, ExpenseItem.self, Person.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let draft = ExpenseDraft(items: [DraftItem(name: "Milk", quantity: 1, cents: 400, category: .groceries)])
+        draft.save(in: container.mainContext)
+        let expense = try container.mainContext.fetch(FetchDescriptor<Expense>()).first!
+        withExtendedLifetime(container) { XCTAssertTrue(expense.owedToMe.isEmpty) }
+    }
+
+    @MainActor
+    func testTurningSharingOffClearsTheSettledFlag() throws {
+        let draft = ExpenseDraft(items: [DraftItem(name: "Milk", quantity: 1, cents: 400, category: .groceries)])
+        draft.plan.isShared = true
+        draft.plan.selectOnly(sam)
+        draft.isSettled = true
+        draft.plan.isShared = false
+        let container = try ModelContainer(
+            for: Expense.self, ExpenseItem.self, Person.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        draft.save(in: container.mainContext)
+        XCTAssertFalse(try container.mainContext.fetch(FetchDescriptor<Expense>()).first!.isSettled)
     }
 }

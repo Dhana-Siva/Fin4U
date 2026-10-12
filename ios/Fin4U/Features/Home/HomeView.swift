@@ -46,6 +46,7 @@ struct HomeView: View {
                 } else {
                     yearSection
                     monthToDateSection
+                    owedSection
                     byMonthSection
                     recentSection
                 }
@@ -55,6 +56,7 @@ struct HomeView: View {
                 switch route {
                 case .month(let month): MonthView(month: month, currency: currency)
                 case .day(let day): DayView(day: day, currency: currency)
+                case .owed: OwedView(currency: currency)
                 }
             }
             .toolbar {
@@ -110,6 +112,19 @@ struct HomeView: View {
                     currency: currency,
                     showCategories: false
                 )
+            }
+        }
+    }
+
+    /// A running balance across all time (not just the year on screen), shown
+    /// only while someone actually owes something.
+    @ViewBuilder
+    private var owedSection: some View {
+        if SpendStats.totalOwed(spends, currency: currency) > 0 {
+            Section {
+                NavigationLink(value: DashboardRoute.owed) {
+                    OwedCard(spends: spends, currency: currency)
+                }
             }
         }
     }
@@ -211,7 +226,7 @@ struct ExpenseRow: View {
         let date = expense.date.formatted(.dateTime.month(.abbreviated).day())
         let count = expense.items.count
         var text = count > 0 ? "\(date) · \(count) item\(count == 1 ? "" : "s")" : date
-        if expense.isShared { text += " · Shared" }
+        if expense.isShared { text += expense.isSettled ? " · Paid back" : " · Shared" }
         return text
     }
 }
