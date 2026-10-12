@@ -11,7 +11,9 @@
 		08E04BAB1C0CB675E47D85ED /* SplitwiseModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E64D6E565B52C4C3DCE4DA /* SplitwiseModels.swift */; };
 		0FE7A68F7D8B27B57C86A21E /* CentsField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5728FE4436C7348F8040789 /* CentsField.swift */; };
 		1451D3EFB300AD5015767768 /* DashboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A87EF4E7CD828AC98FD4E4 /* DashboardLayout.swift */; };
+		1809EEB39EF9F2CBB69CF2BE /* FriendPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A48539162767344AA518D610 /* FriendPickerView.swift */; };
 		1F9728010D49D6D7AAEE7103 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7940272E3D7237720127A350 /* Assets.xcassets */; };
+		42EF93C0A84E42D65105A358 /* SplitwisePoster.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9329FD89DA555C79E2FC3BD /* SplitwisePoster.swift */; };
 		48D7EE17E65147114B9CB54E /* DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D30E6F2C70DA312A14D6FF /* DemoData.swift */; };
 		4B0E5AFDA19FED15A69F86EF /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6868B7878A1FB8E79E68EAE7 /* Keychain.swift */; };
 		4CE0661F9D4B74BF6FC88CCD /* SplitwiseSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7EF66DC691920D2BF7EBE2 /* SplitwiseSession.swift */; };
@@ -25,6 +27,7 @@
 		857EE977008329B1D67FBDDA /* Person.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89814D7083EE7A8DF906C375 /* Person.swift */; };
 		898B690FE3C8360C59DB120B /* DashboardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE369F648A17B2B56F56F939 /* DashboardComponents.swift */; };
 		90A5272F7CBAA38839D45443 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057DC4C281102CC5F863C542 /* ProfileView.swift */; };
+		90E8600975F93E1AE3581465 /* SplitwiseConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143B6D809C2FA5D44BB3685B /* SplitwiseConsentView.swift */; };
 		9262402178A265A53E01578E /* SplitwisePayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED964F7CBD09E59BC1345DF /* SplitwisePayload.swift */; };
 		96D581B0D1E1D80A82DDBB26 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8966D05765DBDF0EB65A5 /* Config.swift */; };
 		970371B8615F94EC17C2A5A3 /* ReceiptAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10BEFD57D544C442B76F4E3 /* ReceiptAPI.swift */; };
@@ -60,6 +63,7 @@
 		057DC4C281102CC5F863C542 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		0B22E27C540F4805644321EF /* ExpenseDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseDraft.swift; sourceTree = "<group>"; };
 		115D8796BEAC28563252884A /* Reconciliation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reconciliation.swift; sourceTree = "<group>"; };
+		143B6D809C2FA5D44BB3685B /* SplitwiseConsentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitwiseConsentView.swift; sourceTree = "<group>"; };
 		156370F06E719A82FE10B7E5 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
 		1740423CC5C96752A34A41CE /* Fin4UTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = Fin4UTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1825A8EC34FA7999EBAA61D6 /* ParsedReceipt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsedReceipt.swift; sourceTree = "<group>"; };
@@ -82,12 +86,14 @@
 		92D32EAC5138C9EC39FB66B3 /* DocumentScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerView.swift; sourceTree = "<group>"; };
 		9E85C7259B1E1B2A65FFB934 /* Fin4UApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fin4UApp.swift; sourceTree = "<group>"; };
 		A06EFD798F456185AD51D5FF /* SpendStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendStats.swift; sourceTree = "<group>"; };
+		A48539162767344AA518D610 /* FriendPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendPickerView.swift; sourceTree = "<group>"; };
 		B4E64D6E565B52C4C3DCE4DA /* SplitwiseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitwiseModels.swift; sourceTree = "<group>"; };
 		B4E8966D05765DBDF0EB65A5 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		BE61A8D9432D0B2D159BB725 /* MonthlyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyChart.swift; sourceTree = "<group>"; };
 		C93E2816A46FFF6A21B95E44 /* Expense.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Expense.swift; sourceTree = "<group>"; };
 		CE369F648A17B2B56F56F939 /* DashboardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardComponents.swift; sourceTree = "<group>"; };
 		D7CBDF0F0B6FA4887FECA9AD /* ExpenseCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseCategory.swift; sourceTree = "<group>"; };
+		D9329FD89DA555C79E2FC3BD /* SplitwisePoster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitwisePoster.swift; sourceTree = "<group>"; };
 		E5728FE4436C7348F8040789 /* CentsField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CentsField.swift; sourceTree = "<group>"; };
 		EED964F7CBD09E59BC1345DF /* SplitwisePayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitwisePayload.swift; sourceTree = "<group>"; };
 		F10BEFD57D544C442B76F4E3 /* ReceiptAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptAPI.swift; sourceTree = "<group>"; };
@@ -95,7 +101,7 @@
 		F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_B115406F-085C-49A7-9EFA-8C9E3D0EB395" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_6454B8E9-5511-4C3F-97C2-EAD14C1C1E99" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -113,6 +119,15 @@
 				7B516DBCE089EA63D8607D96 /* Support */,
 			);
 			path = Fin4U;
+			sourceTree = "<group>";
+		};
+		177BF6AB49872ECFB881571F /* Splitwise */ = {
+			isa = PBXGroup;
+			children = (
+				A48539162767344AA518D610 /* FriendPickerView.swift */,
+				143B6D809C2FA5D44BB3685B /* SplitwiseConsentView.swift */,
+			);
+			path = Splitwise;
 			sourceTree = "<group>";
 		};
 		1C419D3DD32A74CD70A2941D /* Scan */ = {
@@ -223,6 +238,7 @@
 				3911C3EE62AFFAAD444970E4 /* Profile */,
 				AD5A293FB5A3371B44E07F49 /* Review */,
 				1C419D3DD32A74CD70A2941D /* Scan */,
+				177BF6AB49872ECFB881571F /* Splitwise */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -251,6 +267,7 @@
 				52CBF9C4938ECEBF0D9B1098 /* SplitwiseAPI.swift */,
 				B4E64D6E565B52C4C3DCE4DA /* SplitwiseModels.swift */,
 				EED964F7CBD09E59BC1345DF /* SplitwisePayload.swift */,
+				D9329FD89DA555C79E2FC3BD /* SplitwisePoster.swift */,
 				4F7EF66DC691920D2BF7EBE2 /* SplitwiseSession.swift */,
 			);
 			path = Splitwise;
@@ -264,10 +281,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_A9733902-508E-4472-9DBE-430837B4D80E" /* ios */ = {
+		"TEMP_9B6BAA0B-50D2-47AD-8189-AD5A5474C629" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_B115406F-085C-49A7-9EFA-8C9E3D0EB395" /* Secrets.xcconfig */,
+				"TEMP_6454B8E9-5511-4C3F-97C2-EAD14C1C1E99" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -383,6 +400,7 @@
 				571AE505148F55ED62965F73 /* ExpenseCategory.swift in Sources */,
 				CD94226D28FC7791B229F95F /* ExpenseDraft.swift in Sources */,
 				78430DCEB17477A63666554E /* Fin4UApp.swift in Sources */,
+				1809EEB39EF9F2CBB69CF2BE /* FriendPickerView.swift in Sources */,
 				A76E0433E8E5936F077E834D /* HomeView.swift in Sources */,
 				AE0E76EFD1C67D34DDA68FFA /* ImagePrep.swift in Sources */,
 				4B0E5AFDA19FED15A69F86EF /* Keychain.swift in Sources */,
@@ -401,8 +419,10 @@
 				69ABCD4B91035B3230E623C4 /* SpendStats.swift in Sources */,
 				ABA6CB4A5892745CAF09C217 /* Split.swift in Sources */,
 				9A369CB5D09EF26AF48207AF /* SplitwiseAPI.swift in Sources */,
+				90E8600975F93E1AE3581465 /* SplitwiseConsentView.swift in Sources */,
 				08E04BAB1C0CB675E47D85ED /* SplitwiseModels.swift in Sources */,
 				9262402178A265A53E01578E /* SplitwisePayload.swift in Sources */,
+				42EF93C0A84E42D65105A358 /* SplitwisePoster.swift in Sources */,
 				4CE0661F9D4B74BF6FC88CCD /* SplitwiseSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -460,7 +480,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_B115406F-085C-49A7-9EFA-8C9E3D0EB395" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_6454B8E9-5511-4C3F-97C2-EAD14C1C1E99" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -524,7 +544,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_B115406F-085C-49A7-9EFA-8C9E3D0EB395" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_6454B8E9-5511-4C3F-97C2-EAD14C1C1E99" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

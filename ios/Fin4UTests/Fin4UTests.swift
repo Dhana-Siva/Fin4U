@@ -1091,3 +1091,108 @@ final class KeychainTests: XCTestCase {
         XCTAssertNil(Keychain.read(service: service, account: "a"))
     }
 }
+
+@MainActor
+final class SplitwisePosterTests: XCTestCase {
+    private func container() throws -> ModelContainer {
+        try ModelContainer(
+            for: Expense.self, ExpenseItem.self, Person.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+    }
+
+    private func sharedExpense(in context: ModelContext) -> Expense {
+        let sam = Participant(id: "sam-local", name: "Sam")
+        let draft = ExpenseDraft(
+            merchant: "Shoprite",
+            date: Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 9, hour: 12))!,
+            items: [
+                DraftItem(name: "Milk", quantity: 1, cents: 429, category: .groceries),
+                DraftItem(name: "Vitamins", quantity: 1, cents: 1299, category: .health),
+            ],
+            taxCents: 120
+        )
+        draft.plan.isShared = true
+        draft.plan.selectOnly(sam)
+        draft.setItemize(true)
+        draft.setItemShared(true, of: draft.items[0].id)  // milk split 50/50; vitamins stay all yours
+        return draft.save(in: context)
+    }
+
+    private func api(reply: Data = Data(#"{"expenses":[{"id":555}],"errors":{}}"#.utf8), status: Int = 200) -> SplitwiseAPI {
+        StubURLProtocol.handler = { _ in (status, reply) }
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StubURLProtocol.self]
+        return SplitwiseAPI(token: { "tok" }, session: URLSession(configuration: configuration))
+    }
+
+    func testYouPaidTheWholeBillAndEachOwesTheirShareWithTaxAndAllItemsListed() throws {
+        let c = try container()
+        let expense = sharedExpense(in: c.mainContext)
+        let fields = try SplitwisePoster.fields(for: expense, myUserID: 11, myName: "Dhana", friendUserID: 22, groupID: 0)
+
+        let total = expense.totalCents
+        XCTAssertEqual(fields["cost"], Money.plain(total))
+        XCTAssertEqual(fields["users__0__user_id"], "11")
+        XCTAssertEqual(fields["users__0__paid_share"], Money.plain(total))
+        XCTAssertEqual(fields["users__1__user_id"], "22")
+        XCTAssertEqual(fields["users__1__paid_share"], "0.00")
+        // The two owed shares add up to the cost exactly.
+        let owed = ["users__0__owed_share", "users__1__owed_share"].compactMap { fields[$0] }.compactMap(Money.parseCents).reduce(0, +)
+        XCTAssertEqual(owed, total)
+        // Sam only shares the milk (and its slice of tax): far less than half the bill.
+        XCTAssertLessThan(Money.parseCents(fields["users__1__owed_share"]!)!, total / 4)
+        XCTAssertEqual(fields["description"], "Shoprite")
+        XCTAssertEqual(fields["date"], "2026-10-09T12:00:00Z")
+        XCTAssertTrue(fields["details"]!.contains("Milk $4.29  ->  Dhana $2.15 / Sam $2.14"))
+        XCTAssertTrue(fields["details"]!.contains("Vitamins $12.99  ->  Dhana $12.99"))
+        withExtendedLifetime(c) {}
+    }
+
+    func testPostingRecordsTheSplitwiseIdAndRefusesToPostTwice() async throws {
+        let c = try container()
+        let expense = sharedExpense(in: c.mainContext)
+        try await SplitwisePoster.post(expense, api: api(), myUserID: 11, myName: "Dhana", friendUserID: 22, groupID: 5, context: c.mainContext)
+        XCTAssertEqual(expense.splitwiseExpenseID, 555)
+        XCTAssertNotNil(expense.splitwisePostedAt)
+        XCTAssertTrue(String(data: StubURLProtocol.lastBody ?? Data(), encoding: .utf8)!.contains("group_id=5"))
+
+        do {
+            try await SplitwisePoster.post(expense, api: api(), myUserID: 11, myName: "Dhana", friendUserID: 22, groupID: 5, context: c.mainContext)
+            XCTFail("a second post should be refused")
+        } catch { XCTAssertEqual(error as? SplitwisePosterError, .alreadyAdded) }
+        withExtendedLifetime(c) {}
+    }
+
+    func testARefusedExpenseIsNotMarkedAsAdded() async throws {
+        let c = try container()
+        let expense = sharedExpense(in: c.mainContext)
+        let refusing = api(reply: Data(#"{"expenses":[],"errors":{"base":["nope"]}}"#.utf8))
+        do {
+            try await SplitwisePoster.post(expense, api: refusing, myUserID: 11, myName: "Dhana", friendUserID: 22, groupID: 0, context: c.mainContext)
+            XCTFail("should throw")
+        } catch { XCTAssertEqual(error as? SplitwiseError, .rejected(["nope"])) }
+        XCTAssertNil(expense.splitwiseExpenseID)  // so it can be retried
+        withExtendedLifetime(c) {}
+    }
+
+    func testAnUnsharedExpenseCantBeAdded() throws {
+        let c = try container()
+        let draft = ExpenseDraft(merchant: "Solo", items: [DraftItem(name: "x", quantity: 1, cents: 100, category: .other)])
+        let expense = draft.save(in: c.mainContext)
+        XCTAssertThrowsError(try SplitwisePoster.fields(for: expense, myUserID: 1, myName: "Me", friendUserID: 2, groupID: 0)) {
+            XCTAssertEqual($0 as? SplitwisePosterError, .notShared)
+        }
+        withExtendedLifetime(c) {}
+    }
+
+    func testSavingADraftTwiceUpdatesTheSameExpense() throws {
+        let c = try container()
+        let draft = ExpenseDraft(merchant: "Once", items: [DraftItem(name: "x", quantity: 1, cents: 100, category: .other)])
+        let first = draft.save(in: c.mainContext)
+        draft.merchant = "Twice"
+        let second = draft.save(in: c.mainContext)
+        XCTAssertTrue(first === second)
+        XCTAssertEqual(try c.mainContext.fetch(FetchDescriptor<Expense>()).count, 1)
+    }
+}

@@ -35,8 +35,12 @@ final class ExpenseDraft {
     let printedSubtotalCents: Int
     let printedTotalCents: Int
 
-    /// Set when editing a saved expense, so `save` updates it in place.
-    let existing: Expense?
+    /// Set when editing a saved expense, so `save` updates it in place. Also
+    /// set after the first save, so saving again (or adding to Splitwise and
+    /// then saving) never creates a second copy.
+    private(set) var existing: Expense?
+    var splitwiseExpenseID: Int?
+    var splitwisePostedAt: Date?
 
     init(
         merchant: String = "",
@@ -68,6 +72,8 @@ final class ExpenseDraft {
         self.plan = plan
         self.isSettled = isSettled
         self.existing = existing
+        self.splitwiseExpenseID = existing?.splitwiseExpenseID
+        self.splitwisePostedAt = existing?.splitwisePostedAt
     }
 
     convenience init(parsed: ParsedReceipt, image: Data?) {
@@ -208,12 +214,14 @@ final class ExpenseDraft {
 
     // MARK: Persistence
 
-    func save(in context: ModelContext) {
+    @discardableResult
+    func save(in context: ModelContext) -> Expense {
         let expense = existing ?? Expense(
             merchant: "", date: date, currency: currency, category: category,
             subtotalCents: 0, taxCents: 0, tipCents: 0, totalCents: 0, receiptImage: nil
         )
         if existing == nil { context.insert(expense) }
+        existing = expense
 
         let trimmed = merchant.trimmingCharacters(in: .whitespacesAndNewlines)
         expense.merchant = trimmed.isEmpty ? "Receipt" : trimmed
@@ -245,6 +253,7 @@ final class ExpenseDraft {
                 splitData: plan.isShared ? item.split.flatMap { try? JSONEncoder().encode($0) } : nil
             )
         }
+        return expense
     }
 
     /// The backend sends YYYY-MM-DD.

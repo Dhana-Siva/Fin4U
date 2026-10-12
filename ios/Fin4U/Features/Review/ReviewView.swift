@@ -9,6 +9,13 @@ struct ReviewView: View {
 
     @Environment(\.modelContext) private var context
     @Query(sort: \Person.name) private var people: [Person]
+    @Environment(Profile.self) private var profile
+    @Environment(SplitwiseSession.self) private var splitwise
+    @AppStorage("splitwiseGroupID") private var splitwiseGroupID = 0
+    @State private var splitwiseWorking = false
+    @State private var splitwiseError: String?
+    @State private var friendPickerFor: Person?
+    @State private var postAfterPick = false
     @State private var showingPhoto = false
     @State private var newPersonName = ""
 
@@ -136,6 +143,8 @@ struct ReviewView: View {
                 }
             }
 
+            splitwiseSection
+
             if draft.printedTotalCents > 0 {
                 Section {
                     Text("The receipt itself says: subtotal \(Money.format(draft.printedSubtotalCents, currency: draft.currency)), total \(Money.format(draft.printedTotalCents, currency: draft.currency)).")
@@ -180,6 +189,13 @@ struct ReviewView: View {
                 .disabled(!draft.canSave)
             }
         }
+        .sheet(item: $friendPickerFor) { person in
+            FriendPickerView(personName: person.name) { friend in
+                person.splitwiseUserID = friend.id
+                try? context.save()
+                if postAfterPick { Task { await post(to: friend.id) } }
+            }
+        }
         .sheet(isPresented: $showingPhoto) {
             if let data = draft.receiptImage, let image = UIImage(data: data) {
                 NavigationStack {
@@ -195,6 +211,99 @@ struct ReviewView: View {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: Splitwise
+
+    @ViewBuilder
+    private var splitwiseSection: some View {
+        if draft.plan.isShared, let other = draft.plan.other {
+            let person = people.first { $0.id.uuidString == other.id }
+            Section {
+                if let postedAt = draft.splitwisePostedAt, draft.splitwiseExpenseID != nil {
+                    Label("Added to Splitwise on \(postedAt.formatted(date: .abbreviated, time: .omitted))",
+                          systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                } else if splitwise.isConnected {
+                    Button {
+                        Task { await addToSplitwise(person) }
+                    } label: {
+                        HStack {
+                            Label("Add to Splitwise", systemImage: "arrow.up.forward.app")
+                            Spacer()
+                            if splitwiseWorking { ProgressView() }
+                        }
+                    }
+                    .disabled(splitwiseWorking)
+                    if person?.splitwiseUserID != nil {
+                        Button("Not \(other.name)? Choose a different friend") {
+                            postAfterPick = false
+                            friendPickerFor = person
+                        }
+                        .font(.footnote)
+                    }
+                } else {
+                    Label("Splitwise isn't connected", systemImage: "link.badge.plus")
+                        .foregroundStyle(.secondary)
+                }
+                if let splitwiseError {
+                    Text(splitwiseError).font(.footnote).foregroundStyle(.red)
+                }
+            } header: {
+                Text("Splitwise")
+            } footer: {
+                if draft.splitwiseExpenseID != nil {
+                    Text("Changes you make here after this don't update Splitwise.")
+                } else if splitwise.isConnected {
+                    Text("Saves this expense, then adds it to Splitwise: you paid, and \(other.name) owes their share.")
+                } else {
+                    Text("Connect Splitwise from your profile (the picture at the top left of the dashboard).")
+                }
+            }
+        }
+    }
+
+    private func addToSplitwise(_ person: Person?) async {
+        splitwiseError = nil
+        guard let person else {
+            splitwiseError = "Couldn't find that person on this phone."
+            return
+        }
+        guard let friendID = person.splitwiseUserID else {
+            postAfterPick = true
+            friendPickerFor = person  // ask once, then post
+            return
+        }
+        await post(to: friendID)
+    }
+
+    private func post(to friendID: Int) async {
+        splitwiseWorking = true
+        defer { splitwiseWorking = false }
+        if splitwise.user == nil { await splitwise.refresh() }
+        guard let me = splitwise.user else {
+            splitwiseError = splitwise.isConnected
+                ? "Couldn't confirm your Splitwise account. Check your connection and try again."
+                : SplitwiseError.notConnected.localizedDescription
+            return
+        }
+        // Save first (also keeps this screen's draft tied to the saved expense).
+        let expense = draft.save(in: context)
+        try? context.save()
+        do {
+            try await SplitwisePoster.post(
+                expense, api: splitwise.api, myUserID: me.id,
+                myName: profile.firstName.isEmpty ? me.firstName : profile.firstName,
+                friendUserID: friendID, groupID: splitwiseGroupID, context: context
+            )
+            draft.splitwiseExpenseID = expense.splitwiseExpenseID
+            draft.splitwisePostedAt = expense.splitwisePostedAt
+        } catch SplitwiseError.unauthorized {
+            splitwise.disconnect()
+            splitwiseError = SplitwiseError.unauthorized.localizedDescription
+        } catch {
+            splitwiseError = (error as? LocalizedError)?.errorDescription ?? "Couldn't add this to Splitwise."
         }
     }
 

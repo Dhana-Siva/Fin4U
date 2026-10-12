@@ -9,6 +9,7 @@ struct Fin4UApp: App {
     // (exactly how Amma's App Store disclosure went unseen by a reviewer).
     @AppStorage("receiptDisclosureAcknowledged") private var acknowledged = false
     @State private var profile = Profile()
+    @State private var splitwise = SplitwiseSession()
 
     var body: some Scene {
         WindowGroup {
@@ -20,6 +21,8 @@ struct Fin4UApp: App {
                 }
             }
             .environment(profile)
+            .environment(splitwise)
+            .task { await splitwise.refresh() }
         }
         .modelContainer(for: [Expense.self, ExpenseItem.self, Person.self])
     }
