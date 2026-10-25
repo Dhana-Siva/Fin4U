@@ -21,9 +21,9 @@ struct DisclosureView: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 row("camera.viewfinder",
-                    "When you scan a receipt, the photo is sent to Fin4U's server and on to Anthropic, the company behind Claude, the AI that reads it and pulls out the items and prices.")
+                    "When you scan a receipt or import a card statement, it's sent to Fin4U's server and on to Anthropic, the company behind Claude, the AI that reads it and pulls out the items, prices and transactions.")
                 row("trash",
-                    "The photo isn't stored there. Once the items come back, it's discarded.")
+                    "It isn't stored there. Once the results come back, it's discarded.")
                 row("iphone",
                     "Your expenses and a copy of each receipt photo are saved only on this phone.")
             }

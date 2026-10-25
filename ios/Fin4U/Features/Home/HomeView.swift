@@ -16,6 +16,7 @@ struct HomeView: View {
     @Environment(Profile.self) private var profile
     @State private var showingProfile = false
     @State private var scanning = false
+    @State private var importingStatement = false
     @State private var editingDraft: ExpenseDraft?
     @State private var shownYear = Calendar.current.component(.year, from: Date())
     @State private var path: [DashboardRoute] = []
@@ -74,13 +75,23 @@ struct HomeView: View {
                     .accessibilityLabel("Profile")
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button { scanning = true } label: {
-                        Label("Scan receipt", systemImage: "camera.viewfinder")
+                    Menu {
+                        Button { scanning = true } label: {
+                            Label("Scan receipt", systemImage: "camera.viewfinder")
+                        }
+                        Button { importingStatement = true } label: {
+                            Label("Import card statement", systemImage: "creditcard")
+                        }
+                    } label: {
+                        Label("Add", systemImage: "plus.circle.fill")
                     }
                 }
             }
             .fullScreenCover(isPresented: $scanning) {
                 ScanFlowView()
+            }
+            .fullScreenCover(isPresented: $importingStatement) {
+                StatementFlowView()
             }
             .sheet(isPresented: $showingProfile) {
                 ProfileView()
@@ -262,10 +273,11 @@ struct HomeView: View {
         ContentUnavailableView {
             Label("No expenses yet", systemImage: "doc.text.viewfinder")
         } description: {
-            Text("Scan a receipt and Fin4U will itemize it for you.")
+            Text("Scan a receipt and Fin4U will itemize it for you, or import a card statement to add many at once.")
         } actions: {
             Button("Scan a receipt") { scanning = true }
                 .buttonStyle(.borderedProminent)
+            Button("Import card statement") { importingStatement = true }
         }
     }
 

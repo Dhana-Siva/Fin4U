@@ -38,23 +38,63 @@ final class ReceiptAPI {
         }
     }
 
+    private struct Part {
+        let field: String
+        let filename: String
+        let contentType: String
+        let data: Data
+    }
+
     func parse(jpeg: Data) async throws -> ParsedReceipt {
+        try await post(
+            "v1/parse-receipt",
+            parts: [Part(field: "image", filename: "receipt.jpg", contentType: "image/jpeg", data: jpeg)]
+        )
+    }
+
+    /// A card statement as the bank's PDF download.
+    func parseStatement(pdf: Data) async throws -> ParsedStatement {
+        try await post(
+            "v1/parse-statement",
+            parts: [Part(field: "pdf", filename: "statement.pdf", contentType: "application/pdf", data: pdf)],
+            timeout: 300
+        )
+    }
+
+    /// A card statement as photos of its pages, in order.
+    func parseStatement(pages: [Data]) async throws -> ParsedStatement {
+        try await post(
+            "v1/parse-statement",
+            parts: pages.enumerated().map {
+                Part(field: "pages", filename: "page\($0.offset + 1).jpg", contentType: "image/jpeg", data: $0.element)
+            },
+            timeout: 300
+        )
+    }
+
+    /// Statements can take a minute or two to read (the backend only answers
+    /// once the whole statement is done), hence the longer per-call timeout.
+    private func post<Response: Decodable>(_ path: String, parts: [Part], timeout: TimeInterval? = nil) async throws -> Response {
         guard let baseURL = Config.backendBaseURL, let appKey = Config.appKey else {
             throw ReceiptAPIError.notConfigured
         }
 
         let boundary = "Boundary-\(UUID().uuidString)"
-        var request = URLRequest(url: baseURL.appendingPathComponent("v1/parse-receipt"))
+        var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         request.setValue(appKey, forHTTPHeaderField: "X-App-Key")
+        if let timeout { request.timeoutInterval = timeout }
 
         var body = Data()
-        body.append("--\(boundary)\r\n")
-        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"receipt.jpg\"\r\n")
-        body.append("Content-Type: image/jpeg\r\n\r\n")
-        body.append(jpeg)
-        body.append("\r\n--\(boundary)--\r\n")
+        for part in parts {
+            body.append("--\(boundary)\r\n")
+            body.append("Content-Disposition: form-data; name=\"\(part.field)\"; filename=\"\(part.filename)\"\r\n")
+            body.append("Content-Type: \(part.contentType)\r\n\r\n")
+            body.append(part.data)
+            body.append("\r\n")
+        }
+        body.append("--\(boundary)--\r\n")
 
         let data: Data
         let response: URLResponse
@@ -77,7 +117,7 @@ final class ReceiptAPI {
         do {
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
-            return try decoder.decode(ParsedReceipt.self, from: data)
+            return try decoder.decode(Response.self, from: data)
         } catch {
             throw ReceiptAPIError.unreadableResponse
         }

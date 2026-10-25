@@ -32,6 +32,9 @@ final class Expense {
     var splitwisePostedAt: Date?
     /// JSON `SplitSnapshot` (who it's shared with + any hand-edited default).
     var splitData: Data?
+    /// Set when the expense came from a card statement import, e.g.
+    /// "Chase Sapphire ••4242"; empty for scanned or typed receipts.
+    var statementSource: String = ""
 
     var category: ExpenseCategory {
         get { ExpenseCategory(raw: categoryRaw) }

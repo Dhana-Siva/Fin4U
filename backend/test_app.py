@@ -348,3 +348,134 @@ def test_the_token_exchange_sends_the_secret_to_splitwise_and_nowhere_else(sw, m
         "grant_type": "authorization_code", "code": "the-code",
         "redirect_uri": "https://fin4u.example.com/splitwise/callback",
     }
+
+
+# --- Credit card statements -------------------------------------------------
+
+PDF = b"%PDF-1.7\n" + b"fake-pdf-bytes" * 4
+
+
+def statement_json(**overrides) -> str:
+    base = {
+        "is_statement": True,
+        "issuer": "Chase Sapphire",
+        "card_last4": "4242",
+        "currency": "USD",
+        "period_start": "2026-09-05",
+        "period_end": "2026-10-04",
+        "transactions": [
+            {"date": "2026-09-07", "description": "WHOLEFDS MKT 10234", "merchant": "Whole Foods",
+             "amount_cents": 8425, "kind": "purchase", "category": "groceries"},
+            {"date": "2026-09-12", "description": "AMZN MKTP US REFUND", "merchant": "Amazon",
+             "amount_cents": -1999, "kind": "refund", "category": "shopping"},
+            {"date": "2026-09-20", "description": "PAYMENT THANK YOU", "merchant": "Payment",
+             "amount_cents": -50000, "kind": "payment", "category": "other"},
+            {"date": "2026-10-01", "description": "INTEREST CHARGE", "merchant": "Interest",
+             "amount_cents": 312, "kind": "interest", "category": "other"},
+        ],
+        "notes": [],
+    }
+    base.update(overrides)
+    return json.dumps(base)
+
+
+class FakeStream:
+    def __init__(self, message):
+        self.message = message
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def get_final_message(self):
+        return self.message
+
+
+class FakeBetaMessages:
+    def __init__(self, text=None, stop_reason="end_turn"):
+        self.text = text
+        self.stop_reason = stop_reason
+        self.calls = []
+
+    def stream(self, **kwargs):
+        self.calls.append(kwargs)
+        content = [SimpleNamespace(type="text", text=self.text)] if self.text is not None else []
+        return FakeStream(SimpleNamespace(stop_reason=self.stop_reason, content=content))
+
+
+def use_fake_statement(monkeypatch, **kwargs):
+    fake = SimpleNamespace(beta=SimpleNamespace(messages=FakeBetaMessages(**kwargs)))
+    monkeypatch.setattr(backend, "get_client", lambda: fake)
+    return fake.beta.messages
+
+
+def post_statement(client, pdf=None, pages=None, key=KEY):
+    files = []
+    if pdf is not None:
+        files.append(("pdf", ("statement.pdf", pdf)))
+    for i, page in enumerate(pages or []):
+        files.append(("pages", (f"page{i}.jpg", page)))
+    headers = {"X-App-Key": key} if key is not None else {}
+    return client.post("/v1/parse-statement", files=files, headers=headers)
+
+
+def test_statement_pdf_parses_and_totals_exclude_payments(client, monkeypatch):
+    fake = use_fake_statement(monkeypatch, text=statement_json())
+    response = post_statement(client, pdf=PDF)
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["transactions"]) == 4
+    assert body["spent_cents"] == 8425 + 312
+    assert body["refunded_cents"] == 1999
+    call = fake.calls[0]
+    block = call["messages"][0]["content"][0]
+    assert block["type"] == "document" and block["source"]["media_type"] == "application/pdf"
+    assert call["fallbacks"] == "default"
+    assert call["output_config"]["format"]["schema"]["properties"]["transactions"]["items"]["properties"]["kind"]["enum"] == backend.TRANSACTION_KINDS
+
+
+def test_statement_page_photos_are_sent_as_images_in_order(client, monkeypatch):
+    fake = use_fake_statement(monkeypatch, text=statement_json())
+    response = post_statement(client, pages=[JPEG, PNG])
+    assert response.status_code == 200
+    content = fake.calls[0]["messages"][0]["content"]
+    assert [c["type"] for c in content] == ["image", "image", "text"]
+    assert content[1]["source"]["media_type"] == "image/png"
+
+
+def test_statement_requires_exactly_one_kind_of_input(client, monkeypatch):
+    use_fake_statement(monkeypatch, text=statement_json())
+    assert post_statement(client).status_code == 400
+    assert post_statement(client, pdf=PDF, pages=[JPEG]).status_code == 400
+
+
+def test_statement_rejects_non_pdf_and_bad_key(client, monkeypatch):
+    use_fake_statement(monkeypatch, text=statement_json())
+    assert post_statement(client, pdf=b"not a pdf").status_code == 415
+    assert post_statement(client, pdf=PDF, key="wrong").status_code == 401
+
+
+def test_statement_too_many_pages(client, monkeypatch):
+    use_fake_statement(monkeypatch, text=statement_json())
+    response = post_statement(client, pages=[JPEG] * (backend.MAX_STATEMENT_PAGES + 1))
+    assert response.status_code == 413
+
+
+def test_not_a_statement_is_rejected(client, monkeypatch):
+    use_fake_statement(monkeypatch, text=statement_json(is_statement=False, transactions=[]))
+    response = post_statement(client, pdf=PDF)
+    assert response.status_code == 422
+
+
+def test_never_returns_more_than_four_card_digits(client, monkeypatch):
+    use_fake_statement(monkeypatch, text=statement_json(card_last4="4111 1111 1111 4242"))
+    assert post_statement(client, pdf=PDF).json()["card_last4"] == "4242"
+
+
+def test_statement_refusal_and_truncation_are_user_errors(client, monkeypatch):
+    use_fake_statement(monkeypatch, text=None, stop_reason="refusal")
+    assert post_statement(client, pdf=PDF).status_code == 422
+    use_fake_statement(monkeypatch, text=None, stop_reason="max_tokens")
+    assert post_statement(client, pdf=PDF).status_code == 422

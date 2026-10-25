@@ -1428,3 +1428,95 @@ final class PersonalStoreTests: XCTestCase {
         XCTAssertEqual(try container.mainContext.fetch(FetchDescriptor<Expense>()).count, 1)
     }
 }
+
+// MARK: - Card statement import
+
+final class StatementImportTests: XCTestCase {
+    private let calendar = Calendar(identifier: .gregorian)
+
+    private func transaction(_ date: String, _ merchant: String, _ cents: Int, _ kind: StatementTransaction.Kind = .purchase, _ category: String = "shopping") -> StatementTransaction {
+        StatementTransaction(date: date, description: merchant.uppercased(), merchant: merchant, amountCents: cents, kind: kind, category: category)
+    }
+
+    private func statement(_ transactions: [StatementTransaction]) -> ParsedStatement {
+        ParsedStatement(issuer: "Chase Sapphire", cardLast4: "4242", currency: "USD",
+                        periodStart: "2026-09-05", periodEnd: "2026-10-04", transactions: transactions, notes: [])
+    }
+
+    private func day(_ string: String) -> Date { ExpenseDraft.parseDate(string)! }
+
+    func testSkipsCardPaymentsButKeepsRefundsAsNegative() {
+        let lines = StatementImport.lines(for: statement([
+            transaction("2026-09-07", "Whole Foods", 8425, .purchase, "groceries"),
+            transaction("2026-09-12", "Amazon", -1999, .refund),
+            transaction("2026-09-20", "Payment", -50000, .payment, "other"),
+        ]), existing: [], calendar: calendar)
+        XCTAssertEqual(lines.map(\.merchant), ["Whole Foods", "Amazon"])
+        XCTAssertEqual(lines.map(\.category), [.groceries, .shopping])
+        XCTAssertTrue(lines[1].isRefund)
+        XCTAssertTrue(lines.allSatisfy(\.include))
+    }
+
+    func testFlagsAndUnticksAChargeAlreadySavedAsAReceipt() {
+        // Receipt dated the 5th; the statement posts it on the 7th.
+        let existing = [StatementImport.Existing(label: "Whole Foods", date: day("2026-09-05"), totalCents: 8425)]
+        let lines = StatementImport.lines(for: statement([
+            transaction("2026-09-07", "Whole Foods", 8425, .purchase, "groceries"),
+            transaction("2026-09-08", "Target", 3000),
+        ]), existing: existing, calendar: calendar)
+        XCTAssertEqual(lines[0].duplicateOf, "Whole Foods")
+        XCTAssertFalse(lines[0].include)
+        XCTAssertNil(lines[1].duplicateOf)
+        XCTAssertTrue(lines[1].include)
+    }
+
+    func testDoesNotMatchOutsideTheWindowOrOnADifferentAmount() {
+        let existing = [
+            StatementImport.Existing(label: "Old", date: day("2026-08-20"), totalCents: 8425),
+            StatementImport.Existing(label: "Close", date: day("2026-09-07"), totalCents: 8426),
+        ]
+        let lines = StatementImport.lines(for: statement([transaction("2026-09-07", "Whole Foods", 8425)]), existing: existing, calendar: calendar)
+        XCTAssertNil(lines[0].duplicateOf)
+    }
+
+    func testOneSavedExpenseExplainsOnlyOneStatementLine() {
+        // Two identical $5 coffees, only one receipt scanned.
+        let existing = [StatementImport.Existing(label: "Cafe", date: day("2026-09-10"), totalCents: 500)]
+        let lines = StatementImport.lines(for: statement([
+            transaction("2026-09-10", "Cafe", 500, .purchase, "dining"),
+            transaction("2026-09-11", "Cafe", 500, .purchase, "dining"),
+        ]), existing: existing, calendar: calendar)
+        XCTAssertEqual(lines.filter { $0.duplicateOf != nil }.count, 1)
+        XCTAssertEqual(lines.filter(\.include).count, 1)
+    }
+
+    func testUnreadableDateFallsBackToStatementEnd() {
+        let lines = StatementImport.lines(for: statement([transaction("", "Mystery", 100)]), existing: [], calendar: calendar)
+        XCTAssertEqual(lines[0].date, day("2026-10-04"))
+    }
+
+    func testSourceLabelShowsIssuerAndOnlyLastFour() {
+        XCTAssertEqual(StatementImport.sourceLabel(for: statement([])), "Chase Sapphire ••4242")
+    }
+
+    @MainActor
+    func testSavesTickedLinesAsExpensesThatCountTowardCategories() throws {
+        let container = try PersonalStore.makeContainer(inMemory: true)
+        let context = container.mainContext
+        var lines = StatementImport.lines(for: statement([
+            transaction("2026-09-07", "Whole Foods", 8425, .purchase, "groceries"),
+            transaction("2026-09-12", "Amazon", -1999, .refund),
+            transaction("2026-09-14", "Netflix", 1549, .purchase, "entertainment"),
+        ]), existing: [], calendar: calendar)
+        lines[2].include = false
+        lines[0].category = .health   // user re-categorised it on review
+
+        let saved = StatementImport.save(lines, currency: "USD", source: "Chase Sapphire ••4242", in: context)
+        XCTAssertEqual(saved.count, 2)
+        XCTAssertEqual(saved[0].myTotalCents, 8425)
+        XCTAssertEqual(saved[0].myCategoryTotals, [.health: 8425])
+        XCTAssertEqual(saved[1].myTotalCents, -1999)
+        XCTAssertEqual(saved[1].myCategoryTotals, [.shopping: -1999])
+        XCTAssertEqual(saved[1].statementSource, "Chase Sapphire ••4242")
+    }
+}

@@ -33,11 +33,11 @@
 <body>
 <div class="page">
   <h1>Fin4U Privacy Policy</h1>
-  <div class="meta">Effective October 11, 2026</div>
+  <div class="meta">Effective October 25, 2026</div>
 
   <p>Fin4U is an iPhone app that reads your receipts, lists the items and prices, and helps you track your own spending and split costs with a friend or roommate. This page explains what happens to your information.</p>
 
-  <div class="callout"><strong>In short:</strong> a receipt photo is sent to Fin4U's server and on to Anthropic's Claude AI so the items can be read, and it is not kept there. Everything else &mdash; your expenses, names, and profile &mdash; stays on your phone. There are no accounts, no ads, no analytics and no tracking.</div>
+  <div class="callout"><strong>In short:</strong> a receipt photo, or a card statement you choose to import, is sent to Fin4U's server and on to Anthropic's Claude AI so it can be read, and it is not kept there. Everything else &mdash; your expenses, names, and profile &mdash; stays on your phone. There are no accounts, no ads, no analytics and no tracking.</div>
 
   <h2>What leaves your phone</h2>
   <p>When you scan a receipt or choose one from your photos, <strong>only that one image</strong> is sent over an encrypted (HTTPS) connection to Fin4U's server, which passes it to <strong>Anthropic</strong>, the company behind Claude, an AI model that reads the receipt and returns the items, prices, tax, date and merchant. The server sends the result back to your phone.</p>
@@ -49,11 +49,19 @@
   </ul>
   <p>Please don't scan receipts that show information you wouldn't want an AI service to process, such as full card numbers or other people's personal details.</p>
 
+  <h2>Card statements</h2>
+  <p>If you choose to import a credit card statement (a PDF from your bank, or photos of a paper statement), <strong>only that statement</strong> is sent the same way: over HTTPS to Fin4U's server and on to Anthropic, which reads the transactions (date, merchant, amount and a category). As with receipts, the server does not save the statement or what was read from it.</p>
+  <ul>
+    <li>A statement may show your name, address and card details. Fin4U only keeps the transactions you choose to add, plus the card issuer's name and the <strong>last four digits</strong> of the card, on your phone. The server never passes more than four card digits back to the app.</li>
+    <li>Card payments are skipped automatically, and you review every transaction before anything is saved.</li>
+  </ul>
+
   <h2>What stays on your phone</h2>
   <table>
     <tr><th>Information</th><th>Where it lives</th></tr>
     <tr><td>Your expenses, items, categories and totals</td><td>On your phone only</td></tr>
     <tr><td>A copy of each receipt photo you saved</td><td>On your phone only</td></tr>
+    <tr><td>Transactions you imported from a card statement (with the issuer and last four card digits)</td><td>On your phone only</td></tr>
     <tr><td>Names of the people you split with, and who owes what</td><td>On your phone only</td></tr>
     <tr><td>Your name and profile photo (optional)</td><td>On your phone only</td></tr>
   </table>
