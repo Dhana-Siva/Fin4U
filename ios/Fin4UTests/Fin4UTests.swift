@@ -1520,3 +1520,38 @@ final class StatementImportTests: XCTestCase {
         XCTAssertEqual(saved[1].statementSource, "Chase Sapphire ••4242")
     }
 }
+
+// MARK: - Category breakdown
+
+final class CategoryBreakdownTests: XCTestCase {
+    @MainActor
+    func testListsOnlyTheCategorysShareAndGroupsByMerchant() throws {
+        let container = try PersonalStore.makeContainer(inMemory: true)
+        let context = container.mainContext
+        func add(_ merchant: String, _ category: ExpenseCategory, items: [(Int, ExpenseCategory)]) {
+            let total = items.reduce(0) { $0 + $1.0 }
+            let expense = Expense(merchant: merchant, date: Date(), currency: "USD", category: category,
+                                  subtotalCents: total, taxCents: 0, tipCents: 0, totalCents: total, receiptImage: nil)
+            context.insert(expense)
+            expense.items = items.enumerated().map {
+                ExpenseItem(name: "x", quantity: 1, lineTotalCents: $0.element.0, position: $0.offset, categoryRaw: $0.element.1.rawValue)
+            }
+        }
+        add("PSE&G", .utilities, items: [(12000, .utilities)])
+        add("Verizon", .utilities, items: [(8500, .utilities)])
+        add("pse&g ", .utilities, items: [(11000, .utilities)])
+        add("Shoprite", .groceries, items: [(4000, .groceries), (1500, .utilities)])  // light bulbs
+        add("Whole Foods", .groceries, items: [(3000, .groceries)])
+        try context.save()
+
+        let expenses = try context.fetch(FetchDescriptor<Expense>())
+        let entries = CategoryBreakdown.entries(expenses, category: .utilities, currency: "USD")
+        XCTAssertEqual(entries.count, 4)
+        XCTAssertEqual(entries.reduce(0) { $0 + $1.cents }, 12000 + 8500 + 11000 + 1500)
+        XCTAssertEqual(entries.first { $0.expense.merchant == "Shoprite" }?.cents, 1500)
+
+        let merchants = CategoryBreakdown.byMerchant(entries)
+        XCTAssertEqual(merchants.first, CategoryBreakdown.Merchant(name: "PSE&G", cents: 23000, count: 2))
+        XCTAssertEqual(merchants.map(\.name), ["PSE&G", "Verizon", "Shoprite"])
+    }
+}

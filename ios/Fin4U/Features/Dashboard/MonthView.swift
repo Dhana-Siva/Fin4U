@@ -31,7 +31,15 @@ struct MonthView: View {
                 PeriodCard(
                     title: isCurrentMonth ? "Month to date" : "Total for the month",
                     spends: spends,
-                    currency: currency
+                    currency: currency,
+                    showCategories: false
+                )
+                CategoryLinks(
+                    totals: SpendStats.categoryTotals(spends, currency: currency),
+                    currency: currency,
+                    interval: Calendar.current.dateInterval(of: .month, for: month)
+                        ?? DateInterval(start: month, duration: 31 * 86_400),
+                    periodTitle: month.formatted(.dateTime.month(.wide).year())
                 )
             } footer: {
                 if expenses.contains(where: \.isShared) {

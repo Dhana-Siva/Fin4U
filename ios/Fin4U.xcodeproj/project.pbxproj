@@ -42,6 +42,7 @@
 		A7E6BD753BA24073897F37D7 /* DisclosureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7055BD228928ADB675E5AE23 /* DisclosureView.swift */; };
 		ABA6CB4A5892745CAF09C217 /* Split.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AFCA25D93426682FFB85DB6 /* Split.swift */; };
 		AE0E76EFD1C67D34DDA68FFA /* ImagePrep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCF35ACA0B27A295A750E50 /* ImagePrep.swift */; };
+		B3D358C2389965546343100C /* CategoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0BC353A74BD9C7EC3A7549 /* CategoryView.swift */; };
 		B61E006E90EB7EDA35E29544 /* ShareSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952B584C4763233B785A8172 /* ShareSummary.swift */; };
 		C9F52E139ABDD76A8FCC4A0E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */; };
 		CD94226D28FC7791B229F95F /* ExpenseDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B22E27C540F4805644321EF /* ExpenseDraft.swift */; };
@@ -120,7 +121,8 @@
 		F7786D87E8FEF2971819B024 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		"TEMP_80A44E17-1CAA-4E34-A683-3F482F478222" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		FD0BC353A74BD9C7EC3A7549 /* CategoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryView.swift; sourceTree = "<group>"; };
+		"TEMP_89AC963C-8CDA-4D1F-860C-B3582182F5A8" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -203,6 +205,7 @@
 		5FF004669C8D8E70E7EC2BB5 /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
+				FD0BC353A74BD9C7EC3A7549 /* CategoryView.swift */,
 				CE369F648A17B2B56F56F939 /* DashboardComponents.swift */,
 				26A95A19B53D8D4F344FC466 /* DayView.swift */,
 				BE61A8D9432D0B2D159BB725 /* MonthlyChart.swift */,
@@ -334,10 +337,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_B6BE0BC2-8BB7-434F-81AB-77CC1C230D88" /* ios */ = {
+		"TEMP_107FE248-7241-4E2A-B1CD-426D477FDB29" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_80A44E17-1CAA-4E34-A683-3F482F478222" /* Secrets.xcconfig */,
+				"TEMP_89AC963C-8CDA-4D1F-860C-B3582182F5A8" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -441,6 +444,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B3D358C2389965546343100C /* CategoryView.swift in Sources */,
 				0FE7A68F7D8B27B57C86A21E /* CentsField.swift in Sources */,
 				96D581B0D1E1D80A82DDBB26 /* Config.swift in Sources */,
 				898B690FE3C8360C59DB120B /* DashboardComponents.swift in Sources */,
@@ -543,7 +547,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_80A44E17-1CAA-4E34-A683-3F482F478222" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_89AC963C-8CDA-4D1F-860C-B3582182F5A8" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -607,7 +611,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_80A44E17-1CAA-4E34-A683-3F482F478222" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_89AC963C-8CDA-4D1F-860C-B3582182F5A8" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

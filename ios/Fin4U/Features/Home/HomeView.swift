@@ -65,6 +65,8 @@ struct HomeView: View {
                 case .month(let month): MonthView(month: month, currency: currency)
                 case .day(let day): DayView(day: day, currency: currency)
                 case .owed: OwedView(currency: currency)
+                case .category(let category, let start, let end, let title):
+                    CategoryView(category: category, interval: DateInterval(start: start, end: end), periodTitle: title, currency: currency)
                 }
             }
             .toolbar {
@@ -151,7 +153,17 @@ struct HomeView: View {
                     PeriodCard(
                         title: shownYear == currentYear ? "Year to date" : "Total for \(String(shownYear))",
                         spends: yearSpends,
-                        currency: currency
+                        currency: currency,
+                        showCategories: false
+                    )
+                }
+                // Each category is its own row so it can open a breakdown.
+                if let interval = calendar.dateInterval(of: .year, for: calendar.date(from: DateComponents(year: shownYear)) ?? Date()) {
+                    CategoryLinks(
+                        totals: SpendStats.categoryTotals(yearSpends, currency: currency),
+                        currency: currency,
+                        interval: interval,
+                        periodTitle: String(shownYear)
                     )
                 }
             }

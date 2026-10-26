@@ -6,6 +6,8 @@ enum DashboardRoute: Hashable {
     case month(Date)  // first day of the month
     case day(Date)    // start of the day
     case owed         // everything others still owe
+    /// One category's spending between `start` and `end` (end exclusive).
+    case category(ExpenseCategory, start: Date, end: Date, title: String)
 }
 
 /// A period's headline total plus the same breakdown by category.
@@ -78,6 +80,47 @@ struct OwedCard: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+/// The same bars as `CategoryBars`, but each is its own list row that opens
+/// that category's breakdown for the period.
+struct CategoryLinks: View {
+    let totals: [(category: ExpenseCategory, cents: Int)]
+    let currency: String
+    let interval: DateInterval
+    let periodTitle: String
+
+    var body: some View {
+        let largest = max(totals.map(\.cents).max() ?? 1, 1)
+        ForEach(totals, id: \.category) { entry in
+            NavigationLink(value: DashboardRoute.category(entry.category, start: interval.start, end: interval.end, title: periodTitle)) {
+                CategoryBar(category: entry.category, cents: entry.cents, largest: largest, currency: currency)
+            }
+        }
+    }
+}
+
+struct CategoryBar: View {
+    let category: ExpenseCategory
+    let cents: Int
+    let largest: Int
+    let currency: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Label(category.title, systemImage: category.symbol)
+                    .font(.footnote)
+                    .foregroundStyle(category.color)
+                Spacer()
+                Text(Money.format(cents, currency: currency))
+                    .font(.footnote)
+                    .monospacedDigit()
+            }
+            ProgressView(value: Double(max(cents, 0)), total: Double(largest))
+                .tint(category.color)
+        }
     }
 }
 
