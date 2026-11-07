@@ -432,7 +432,10 @@ def parse_receipt(
         raise HTTPException(status_code=503, detail="Server is not configured.") from exc
 
     if not parsed.is_receipt:
-        raise HTTPException(status_code=422, detail="That doesn't look like a receipt.")
+        raise HTTPException(
+            status_code=422,
+            detail="That doesn't look like a receipt. If it's a credit card statement, go back and use + → Import card statement.",
+        )
 
     items_total, checks = reconcile(parsed)
     return ReceiptResponse(

@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 import SwiftData
 import UniformTypeIdentifiers
 import VisionKit
@@ -19,6 +20,7 @@ struct StatementFlowView: View {
     @State private var phase: Phase = .choose
     @State private var showImporter = false
     @State private var showCamera = false
+    @State private var photoItems: [PhotosPickerItem] = []
     @State private var task: Task<Void, Never>?
 
     var body: some View {
@@ -42,6 +44,21 @@ struct StatementFlowView: View {
                 start { try Self.readPDF(at: url) }
             case .failure(let error):
                 phase = .failed("Couldn't open that file. \(error.localizedDescription)")
+            }
+        }
+        .onChange(of: photoItems) { _, items in
+            guard !items.isEmpty else { return }
+            photoItems = []
+            phase = .processing
+            task = Task {
+                var images: [UIImage] = []
+                for item in items {
+                    if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                        images.append(image)
+                    }
+                }
+                if Task.isCancelled { return }
+                startPages(images)
             }
         }
         .fullScreenCover(isPresented: $showCamera) {
@@ -87,6 +104,15 @@ struct StatementFlowView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
 
+            // Screenshots of the statement from the bank's app, or photos
+            // already taken -- several pages at once, in the order picked.
+            PhotosPicker(selection: $photoItems, maxSelectionCount: 12, selectionBehavior: .ordered, matching: .images) {
+                Label("Choose screenshots or photos", systemImage: "photo.on.rectangle")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+
             if DocumentScannerView.isSupported {
                 Button { showCamera = true } label: {
                     Label("Scan paper statement", systemImage: "camera.viewfinder")
@@ -102,7 +128,7 @@ struct StatementFlowView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            Text("Tip: in your bank's app, download the statement, then tap Share → Save to Files.")
+            Text("Tip: a PDF from your bank's app (Share → Save to Files) reads best. Screenshots of each page work too.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
