@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import PhotosUI
 
 /// Choose a source -> read the receipt -> review and save. Also offers
@@ -12,12 +13,17 @@ struct ScanFlowView: View {
         case processing
         case review(ExpenseDraft)
         case failed(String)
+        case statement(ParsedStatement, [StatementLine])
     }
 
     @State private var phase: Phase = .choose
     @State private var showCamera = false
     @State private var pickerItem: PhotosPickerItem?
     @State private var task: Task<Void, Never>?
+    /// The last photo sent, kept so a "not a receipt" can be retried as a
+    /// card statement without picking it again.
+    @State private var lastJPEG: Data?
+    @Query private var expenses: [Expense]
 
     var body: some View {
         NavigationStack {
@@ -31,6 +37,8 @@ struct ScanFlowView: View {
                     ReviewView(draft: draft, onClose: { dismiss() })
                 case .failed(let message):
                     failedView(message)
+                case .statement(let statement, let lines):
+                    StatementReviewView(statement: statement, lines: lines, onDone: { dismiss() })
                 }
             }
         }
@@ -144,6 +152,15 @@ struct ScanFlowView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Spacer()
+            // People often scan a statement page here by mistake.
+            if lastJPEG != nil {
+                Button { retryAsStatement() } label: {
+                    Label("Read it as a card statement", systemImage: "creditcard")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+            }
             Button { phase = .choose } label: {
                 Text("Try again").frame(maxWidth: .infinity)
             }
@@ -167,6 +184,24 @@ struct ScanFlowView: View {
     /// Runs `loadImage`, then uploads and parses the result. Switches to the
     /// processing screen immediately; every outcome lands on review or
     /// failed (or nowhere, if cancelled).
+    private func retryAsStatement() {
+        guard let jpeg = lastJPEG else { return }
+        phase = .processing
+        task = Task {
+            do {
+                let statement = try await ReceiptAPI.shared.parseStatement(pages: [jpeg])
+                if Task.isCancelled { return }
+                let lines = StatementImport.lines(for: statement, existing: StatementImport.existing(from: expenses))
+                phase = lines.isEmpty
+                    ? .failed("No purchases were found on that statement.")
+                    : .statement(statement, lines)
+            } catch is CancellationError {
+            } catch {
+                phase = .failed(error.localizedDescription)
+            }
+        }
+    }
+
     private func start(_ loadImage: @escaping () async -> UIImage?, note: String?) {
         phase = .processing
         task = Task {
@@ -177,6 +212,7 @@ struct ScanFlowView: View {
                 return
             }
             do {
+                lastJPEG = jpeg
                 let parsed = try await ReceiptAPI.shared.parse(jpeg: jpeg)
                 if Task.isCancelled { return }
                 let draft = ExpenseDraft(parsed: parsed, image: jpeg)
