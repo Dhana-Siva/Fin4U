@@ -104,6 +104,7 @@ enum StatementImport {
                 receiptImage: nil
             )
             expense.statementSource = source
+            expense.paidWith = source
             context.insert(expense)
             expense.items = [
                 ExpenseItem(

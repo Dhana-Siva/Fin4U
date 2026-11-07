@@ -20,6 +20,7 @@
 		4CE0661F9D4B74BF6FC88CCD /* SplitwiseSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7EF66DC691920D2BF7EBE2 /* SplitwiseSession.swift */; };
 		571AE505148F55ED62965F73 /* ExpenseCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CBDF0F0B6FA4887FECA9AD /* ExpenseCategory.swift */; };
 		5A401283EBED08048CF30DAB /* Fin4UTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A62C392F0E64975316F9EDD /* Fin4UTests.swift */; };
+		65665B88EDD3FBFEAD34E87B /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA63DEDDAE238507FBE1571 /* CardView.swift */; };
 		68EA00AF14430835C5147304 /* MonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3563A80F7AB8CCD32808D93F /* MonthView.swift */; };
 		691A4D8A501F065461AE7E69 /* StatementFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFB726F4E552DCA79A1692E /* StatementFlowView.swift */; };
 		69ABCD4B91035B3230E623C4 /* SpendStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06EFD798F456185AD51D5FF /* SpendStats.swift */; };
@@ -72,6 +73,7 @@
 		02A94A24F04E14839F8EE290 /* OwedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwedView.swift; sourceTree = "<group>"; };
 		057DC4C281102CC5F863C542 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		0B22E27C540F4805644321EF /* ExpenseDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseDraft.swift; sourceTree = "<group>"; };
+		0FA63DEDDAE238507FBE1571 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		115D8796BEAC28563252884A /* Reconciliation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reconciliation.swift; sourceTree = "<group>"; };
 		143B6D809C2FA5D44BB3685B /* SplitwiseConsentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitwiseConsentView.swift; sourceTree = "<group>"; };
 		156370F06E719A82FE10B7E5 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
@@ -122,7 +124,7 @@
 		F874F03D569B7AB187302A1D /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		FB08ECC6EFB1F1096CCD602D /* Fin4U.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Fin4U.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD0BC353A74BD9C7EC3A7549 /* CategoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryView.swift; sourceTree = "<group>"; };
-		"TEMP_89AC963C-8CDA-4D1F-860C-B3582182F5A8" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_DDC6D312-5383-4D21-80DB-5194DF7D4815" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -205,6 +207,7 @@
 		5FF004669C8D8E70E7EC2BB5 /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
+				0FA63DEDDAE238507FBE1571 /* CardView.swift */,
 				FD0BC353A74BD9C7EC3A7549 /* CategoryView.swift */,
 				CE369F648A17B2B56F56F939 /* DashboardComponents.swift */,
 				26A95A19B53D8D4F344FC466 /* DayView.swift */,
@@ -337,10 +340,10 @@
 			path = Fin4UTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_107FE248-7241-4E2A-B1CD-426D477FDB29" /* ios */ = {
+		"TEMP_C5CF2561-89B8-487C-8BE2-2728A7B433B5" /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_89AC963C-8CDA-4D1F-860C-B3582182F5A8" /* Secrets.xcconfig */,
+				"TEMP_DDC6D312-5383-4D21-80DB-5194DF7D4815" /* Secrets.xcconfig */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -444,6 +447,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65665B88EDD3FBFEAD34E87B /* CardView.swift in Sources */,
 				B3D358C2389965546343100C /* CategoryView.swift in Sources */,
 				0FE7A68F7D8B27B57C86A21E /* CentsField.swift in Sources */,
 				96D581B0D1E1D80A82DDBB26 /* Config.swift in Sources */,
@@ -547,7 +551,7 @@
 		};
 		C2773E424668A7CFBC8D3264 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_89AC963C-8CDA-4D1F-860C-B3582182F5A8" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_DDC6D312-5383-4D21-80DB-5194DF7D4815" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -611,7 +615,7 @@
 		};
 		C97F60E526EBF28373D30F21 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_89AC963C-8CDA-4D1F-860C-B3582182F5A8" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_DDC6D312-5383-4D21-80DB-5194DF7D4815" /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

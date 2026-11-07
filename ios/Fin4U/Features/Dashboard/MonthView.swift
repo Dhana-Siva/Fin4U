@@ -47,6 +47,19 @@ struct MonthView: View {
                 }
             }
 
+            let cards = SpendStats.cardTotals(spends, currency: currency)
+            if !cards.isEmpty {
+                Section("By card") {
+                    CardLinks(
+                        totals: cards,
+                        currency: currency,
+                        interval: Calendar.current.dateInterval(of: .month, for: month)
+                            ?? DateInterval(start: month, duration: 31 * 86_400),
+                        periodTitle: month.formatted(.dateTime.month(.wide).year())
+                    )
+                }
+            }
+
             Section("By day") {
                 if days.isEmpty {
                     Text("Nothing spent this month.").foregroundStyle(.secondary)

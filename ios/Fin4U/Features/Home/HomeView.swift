@@ -49,6 +49,7 @@ struct HomeView: View {
                         .listRowSeparator(.hidden)
                 } else {
                     yearSection
+                    byCardSection
                     chartSection
                     monthToDateSection
                     owedSection
@@ -67,6 +68,8 @@ struct HomeView: View {
                 case .owed: OwedView(currency: currency)
                 case .category(let category, let start, let end, let title):
                     CategoryView(category: category, interval: DateInterval(start: start, end: end), periodTitle: title, currency: currency)
+                case .card(let card, let start, let end, let title):
+                    CardView(card: card, interval: DateInterval(start: start, end: end), periodTitle: title, currency: currency)
                 }
             }
             .toolbar {
@@ -170,6 +173,24 @@ struct HomeView: View {
         } header: {
             header(.summary, "Your expenses summary",
                    summary: money(SpendStats.total(yearSpends, currency: currency)), prominent: true)
+        }
+    }
+
+    /// Spending per card for the year on screen. Hidden until at least one
+    /// expense has a card (from a statement import or "Paid with").
+    @ViewBuilder
+    private var byCardSection: some View {
+        let yearSpends = spends(inYear: shownYear)
+        let cards = SpendStats.cardTotals(yearSpends, currency: currency)
+        if !cards.isEmpty {
+            Section {
+                if isExpanded(.byCard),
+                   let interval = calendar.dateInterval(of: .year, for: calendar.date(from: DateComponents(year: shownYear)) ?? Date()) {
+                    CardLinks(totals: cards, currency: currency, interval: interval, periodTitle: String(shownYear))
+                }
+            } header: {
+                header(.byCard, "By card, \(String(shownYear))")
+            }
         }
     }
 

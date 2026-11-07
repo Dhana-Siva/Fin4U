@@ -34,6 +34,8 @@ final class ExpenseDraft {
     var receiptImage: Data?
     var plan = SplitPlan()
     var isSettled = false
+    /// Card it was paid with ("" = not set).
+    var paidWith = ""
 
     /// What the receipt itself printed -- kept only to cross-check the items
     /// as the user edits. Zero means "not shown", and for an already-saved
@@ -130,6 +132,7 @@ final class ExpenseDraft {
             existing: expense
         )
         adjustmentCents = expense.adjustmentCents
+        paidWith = expense.card
     }
 
     // MARK: Derived totals -- always computed from the items, never stored
@@ -262,6 +265,7 @@ final class ExpenseDraft {
         expense.adjustmentCents = effectiveAdjustmentCents
         expense.totalCents = totalCents
         expense.receiptImage = receiptImage
+        expense.paidWith = paidWith.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Splits are only stored for shared expenses; turning sharing off
         // means everything is yours again, so no stale splits are kept.

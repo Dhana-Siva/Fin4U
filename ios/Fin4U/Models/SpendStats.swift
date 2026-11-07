@@ -9,11 +9,13 @@ struct Spend: Equatable {
     var categories: [ExpenseCategory: Int]
     /// What others still owe the owner for this expense.
     var owed: [PersonTotal] = []
+    /// Card it was paid with ("" if not set).
+    var card: String = ""
 }
 
 extension Expense {
     var spend: Spend {
-        Spend(date: date, currency: currency, cents: myTotalCents, categories: myCategoryTotals, owed: owedToMe)
+        Spend(date: date, currency: currency, cents: myTotalCents, categories: myCategoryTotals, owed: owedToMe, card: card)
     }
 }
 
@@ -68,6 +70,20 @@ enum SpendStats {
 
     static func totalOwed(_ spends: [Spend], currency: String) -> Int {
         owed(spends, currency: currency).reduce(0) { $0 + $1.cents }
+    }
+
+    /// Spending per card, biggest first, with anything not assigned to a
+    /// card last as "" -- but only once at least one card is in use, so the
+    /// section doesn't appear for someone who never sets cards.
+    static func cardTotals(_ spends: [Spend], currency: String) -> [(card: String, cents: Int)] {
+        var totals: [String: Int] = [:]
+        for spend in spends where spend.currency == currency { totals[spend.card, default: 0] += spend.cents }
+        let cards = totals.filter { !$0.key.isEmpty && $0.value != 0 }
+            .map { (card: $0.key, cents: $0.value) }
+            .sorted { $0.cents != $1.cents ? $0.cents > $1.cents : $0.card < $1.card }
+        guard !cards.isEmpty else { return [] }
+        let unassigned = totals[""] ?? 0
+        return unassigned != 0 ? cards + [(card: "", cents: unassigned)] : cards
     }
 
     static func categoryTotals(_ spends: [Spend], currency: String) -> [(category: ExpenseCategory, cents: Int)] {

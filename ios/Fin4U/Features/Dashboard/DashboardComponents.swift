@@ -8,6 +8,13 @@ enum DashboardRoute: Hashable {
     case owed         // everything others still owe
     /// One category's spending between `start` and `end` (end exclusive).
     case category(ExpenseCategory, start: Date, end: Date, title: String)
+    /// One card's spending in the period; "" means expenses with no card set.
+    case card(String, start: Date, end: Date, title: String)
+}
+
+extension String {
+    /// Display name for a card value; "" is the "not set" bucket.
+    var cardTitle: String { isEmpty ? "No card set" : self }
 }
 
 /// A period's headline total plus the same breakdown by category.
@@ -96,6 +103,36 @@ struct CategoryLinks: View {
         ForEach(totals, id: \.category) { entry in
             NavigationLink(value: DashboardRoute.category(entry.category, start: interval.start, end: interval.end, title: periodTitle)) {
                 CategoryBar(category: entry.category, cents: entry.cents, largest: largest, currency: currency)
+            }
+        }
+    }
+}
+
+/// One row per card, each opening that card's breakdown for the period.
+struct CardLinks: View {
+    let totals: [(card: String, cents: Int)]
+    let currency: String
+    let interval: DateInterval
+    let periodTitle: String
+
+    var body: some View {
+        let largest = max(totals.map(\.cents).max() ?? 1, 1)
+        ForEach(totals, id: \.card) { entry in
+            NavigationLink(value: DashboardRoute.card(entry.card, start: interval.start, end: interval.end, title: periodTitle)) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Label(entry.card.cardTitle, systemImage: entry.card.isEmpty ? "questionmark.circle" : "creditcard.fill")
+                            .font(.footnote)
+                            .foregroundStyle(entry.card.isEmpty ? Color.secondary : Color.accentColor)
+                            .lineLimit(1)
+                        Spacer()
+                        Text(Money.format(entry.cents, currency: currency))
+                            .font(.footnote)
+                            .monospacedDigit()
+                    }
+                    ProgressView(value: Double(max(entry.cents, 0)), total: Double(largest))
+                        .tint(entry.card.isEmpty ? .gray : .accentColor)
+                }
             }
         }
     }

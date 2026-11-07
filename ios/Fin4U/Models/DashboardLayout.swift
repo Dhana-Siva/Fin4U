@@ -2,7 +2,7 @@ import Foundation
 
 /// The parts of the dashboard that can be minimised.
 enum DashboardSection: String, CaseIterable {
-    case summary, chart, monthToDate, owed, byMonth, recent
+    case summary, byCard, chart, monthToDate, owed, byMonth, recent
 }
 
 /// Which sections are minimised, as a comma-separated string so it can live

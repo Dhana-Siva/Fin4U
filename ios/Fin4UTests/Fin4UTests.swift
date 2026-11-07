@@ -1555,3 +1555,39 @@ final class CategoryBreakdownTests: XCTestCase {
         XCTAssertEqual(merchants.map(\.name), ["PSE&G", "Verizon", "Shoprite"])
     }
 }
+
+// MARK: - By card
+
+final class CardTotalsTests: XCTestCase {
+    private func spend(_ cents: Int, _ card: String, _ currency: String = "USD") -> Spend {
+        Spend(date: Date(), currency: currency, cents: cents, categories: [:], card: card)
+    }
+
+    func testTotalsPerCardBiggestFirstWithUnassignedLast() {
+        let totals = SpendStats.cardTotals([
+            spend(5000, "Costco card"), spend(12000, "American Express ••1009"),
+            spend(3000, "Costco card"), spend(700, ""), spend(-1000, "American Express ••1009"),
+            spend(9999, "Costco card", "INR"),
+        ], currency: "USD")
+        XCTAssertEqual(totals.map(\.card), ["American Express ••1009", "Costco card", ""])
+        XCTAssertEqual(totals.map(\.cents), [11000, 8000, 700])
+    }
+
+    func testHiddenWhenNoCardsAreUsed() {
+        XCTAssertTrue(SpendStats.cardTotals([spend(500, ""), spend(900, "")], currency: "USD").isEmpty)
+    }
+
+    @MainActor
+    func testStatementImportsCountUnderTheirCardAndPaidWithOverrides() throws {
+        let container = try PersonalStore.makeContainer(inMemory: true)
+        let context = container.mainContext
+        let old = Expense(merchant: "Uber", date: Date(), currency: "USD", category: .transport,
+                          subtotalCents: 2000, taxCents: 0, tipCents: 0, totalCents: 2000, receiptImage: nil)
+        old.statementSource = "Chase Sapphire ••4242"   // imported before paidWith existed
+        context.insert(old)
+        XCTAssertEqual(old.card, "Chase Sapphire ••4242")
+        old.paidWith = "Costco card"
+        XCTAssertEqual(old.card, "Costco card")
+        XCTAssertEqual(old.spend.card, "Costco card")
+    }
+}

@@ -35,6 +35,16 @@ final class Expense {
     /// Set when the expense came from a card statement import, e.g.
     /// "Chase Sapphire ••4242"; empty for scanned or typed receipts.
     var statementSource: String = ""
+    /// The card (or account) it was paid with, e.g. "American Express ••1009"
+    /// or "Costco card". Empty if not set.
+    var paidWith: String = ""
+
+    /// The card for "By card" totals. Statement imports from before
+    /// `paidWith` existed fall back to the statement they came from.
+    var card: String {
+        let explicit = paidWith.trimmingCharacters(in: .whitespacesAndNewlines)
+        return explicit.isEmpty ? statementSource : explicit
+    }
 
     var category: ExpenseCategory {
         get { ExpenseCategory(raw: categoryRaw) }

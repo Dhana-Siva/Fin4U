@@ -9,6 +9,9 @@ struct ReviewView: View {
 
     @Environment(\.modelContext) private var context
     @Query(sort: \Person.name) private var people: [Person]
+    @Query private var allExpenses: [Expense]
+    @State private var addingCard = false
+    @State private var newCardName = ""
     @Environment(Profile.self) private var profile
     @Environment(SplitwiseSession.self) private var splitwise
     @AppStorage("splitwiseGroupID") private var splitwiseGroupID = 0
@@ -57,6 +60,7 @@ struct ReviewView: View {
                         Label(category.title, systemImage: category.symbol).tag(category)
                     }
                 }
+                paidWithRow
             }
 
             Section {
@@ -259,6 +263,44 @@ struct ReviewView: View {
     }
 
     // MARK: Sharing the result
+
+    /// Cards already used on other expenses (and statement imports), so the
+    /// same card is always spelled the same way.
+    private var knownCards: [String] {
+        var cards = Set(allExpenses.map(\.card).filter { !$0.isEmpty })
+        if !draft.paidWith.isEmpty { cards.insert(draft.paidWith) }
+        return cards.sorted()
+    }
+
+    private var paidWithRow: some View {
+        Menu {
+            Button("None") { draft.paidWith = "" }
+            ForEach(knownCards, id: \.self) { card in
+                Button(card) { draft.paidWith = card }
+            }
+            Divider()
+            Button("Add a card…") {
+                newCardName = ""
+                addingCard = true
+            }
+        } label: {
+            HStack {
+                Text("Paid with").foregroundStyle(.primary)
+                Spacer()
+                Text(draft.paidWith.isEmpty ? "Not set" : draft.paidWith)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+        .alert("Add a card", isPresented: $addingCard) {
+            TextField("e.g. American Express, Costco card", text: $newCardName)
+            Button("Add") {
+                let name = newCardName.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !name.isEmpty { draft.paidWith = name }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
 
     /// A short message with what each person owes, to send from any app.
     @ViewBuilder
